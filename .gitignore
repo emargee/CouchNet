@@ -1,8 +1,8 @@
 _ReSharper.*
-*/bin
-*/obj
 *.resharper.user
 *.suo
 *.bak
 *.sln.cache
 *.ReSharper.user
+src/CouchNet*/bin*
+src/CouchNet*/obj*
