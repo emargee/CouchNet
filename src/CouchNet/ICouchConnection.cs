@@ -2,9 +2,9 @@ namespace CouchNet
 {
     public interface ICouchConnection
     {
-        string Get(string path, string encoding);
-        string Put(string path, string data, string encoding);
-        string Post(string path, string data, string encoding);
-        string Delete(string path, string encoding);
+        ICouchResponseMessage Get(string path, string encoding);
+        ICouchResponseMessage Put(string path, string data, string encoding);
+        ICouchResponseMessage Post(string path, string data, string encoding);
+        ICouchResponseMessage Delete(string path, string encoding);
     }
 }

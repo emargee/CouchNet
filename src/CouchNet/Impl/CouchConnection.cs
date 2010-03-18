@@ -1,9 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Net;
+using System.Text;
 using Microsoft.Http;
 
 using CouchNet.Enums;
+using Microsoft.Http.Headers;
 
 namespace CouchNet.Impl
 {
@@ -13,15 +14,9 @@ namespace CouchNet.Impl
 
         #region Private Properties
 
-        internal Uri Address { get; set; }
+        internal Uri BaseAddress { get; set; }
 
-        internal string Encoding { get; set; }
-
-        #endregion
-
-        #region Public Properties
-
-        public Dictionary<string, string> CustomHeaders { get; set; }
+        internal string RequestEncoding { get; set; }
 
         #endregion
 
@@ -29,96 +24,117 @@ namespace CouchNet.Impl
 
         public CouchConnection() : this(new UriBuilder("http", "localhost", 5984).Uri) { }
 
-        public CouchConnection(string url) : this(new UriBuilder(FixHost(url)).Uri) { }
+        public CouchConnection(string url) : this(new UriBuilder(url).Uri) { }
 
-        public CouchConnection(string host, int port) : this(new UriBuilder(FixHost(host)) { Port = port }.Uri) { }
+        public CouchConnection(string host, int port) : this(new UriBuilder(host) { Port = port }.Uri) { }
 
-        public CouchConnection(string host, int port, string encoding) : this(new UriBuilder(FixHost(host)) { Port = port }.Uri, encoding) { }
+        public CouchConnection(string host, int port, string encoding) : this(new UriBuilder(host) { Port = port }.Uri, encoding) { }
 
         public CouchConnection(Uri uri) : this(uri, "application/json") { }
 
         public CouchConnection(Uri uri, string encoding)
         {
-            Address = uri;
-            Encoding = encoding;
-            CustomHeaders = new Dictionary<string, string>();
+            BaseAddress = uri;
+            RequestEncoding = encoding;
+            Client = new HttpClient(BaseAddress);
         }
 
         #endregion
 
-        #region Public Methods
+        #region Interface Methods
 
-        public string Get(string path)
+        public ICouchResponseMessage Get(string path)
         {
-            return MakeRequest(path, HttpVerb.Get, null, Encoding);
+            return Send(path, HttpVerb.Get, null, RequestEncoding);
         }
 
-        public string Get(string path, string encoding)
+        public ICouchResponseMessage Get(string path, string encoding)
         {
-            return MakeRequest(path, HttpVerb.Get, null, encoding);
+            return Send(path, HttpVerb.Get, null, encoding);
         }
 
-        public string Put(string path, string data)
+        public ICouchResponseMessage Put(string path, string data)
         {
-            return MakeRequest(path, HttpVerb.Put, data, Encoding);
+            return Send(path, HttpVerb.Put, data, RequestEncoding);
         }
 
-        public string Put(string path, string data, string encoding)
+        public ICouchResponseMessage Put(string path, string data, string encoding)
         {
-            return MakeRequest(path, HttpVerb.Put, data, encoding);
+            return Send(path, HttpVerb.Put, data, encoding);
         }
 
-        public string Post(string path, string data)
+        public ICouchResponseMessage Post(string path, string data)
         {
-            return MakeRequest(path, HttpVerb.Post, data, Encoding);
+            return Send(path, HttpVerb.Post, data, RequestEncoding);
         }
 
-        public string Post(string path, string data, string encoding)
+        public ICouchResponseMessage Post(string path, string data, string encoding)
         {
-            return MakeRequest(path, HttpVerb.Post, data, encoding);
+            return Send(path, HttpVerb.Post, data, encoding);
         }
 
-        public string Delete(string path)
+        public ICouchResponseMessage Delete(string path)
         {
-            return MakeRequest(path, HttpVerb.Delete, null, Encoding);
+            return Send(path, HttpVerb.Delete, null, RequestEncoding);
         }
 
-        public string Delete(string path, string encoding)
+        public ICouchResponseMessage Delete(string path, string encoding)
         {
-            return MakeRequest(path, HttpVerb.Delete, null, encoding);
+            return Send(path, HttpVerb.Delete, null, encoding);
+        }
+
+        #endregion
+
+        #region Headers
+
+        public void ClearHeaders()
+        {
+            Client.DefaultHeaders.Clear();
+        }
+
+        public void SetHeader(string key, string value)
+        {
+            if (key == null || value == null)
+            {
+                return;
+            }
+
+            if (Client.DefaultHeaders.ContainsKey(key))
+            {
+                Client.DefaultHeaders[key] = value;
+            }
+            else
+            {
+                Client.DefaultHeaders.Add(key, value);
+            }
+        }
+
+        public void SetCredentials(NetworkCredential credential)
+        {
+            SetCredentials(credential.UserName, credential.Password);
+        }
+
+        public void SetCredentials(string userName, string password)
+        {
+            string authInfo = userName + ":" + password;
+            authInfo = Convert.ToBase64String(Encoding.Default.GetBytes(authInfo));
+            Client.DefaultHeaders.Authorization = new Credential("Basic",authInfo);
         }
 
         public void DisableCache()
         {
-            CustomHeaders.Add("Cache-Control", "no-cache");
+            SetHeader("Cache-Control", "no-cache");
         }
 
         #endregion
 
         #region Private Methods
 
-        private string MakeRequest(string path, HttpVerb method, string data, string encoding)
+        private ICouchResponseMessage Send(string path, HttpVerb method, string data, string encoding)
         {
-            Client = new HttpClient(Address);
-
             ServicePointManager.Expect100Continue = false;
 
             HttpResponseMessage message;
-
-            if (CustomHeaders.Count > 0)
-            {
-                foreach (var header in CustomHeaders)
-                {
-                    if (Client.DefaultHeaders.ContainsKey(header.Key))
-                    {
-                        Client.DefaultHeaders[header.Key] = header.Value;
-                    }
-                    else
-                    {
-                        Client.DefaultHeaders.Add(header.Key, header.Value);
-                    }
-                }
-            }
 
             switch (method)
             {
@@ -148,23 +164,17 @@ namespace CouchNet.Impl
 
                 default:
                     {
-                        return string.Empty;
+                        throw new NotImplementedException("Unknown/Unsupported HTTP verb.");
                     }
             }
 
-            return message.Content.ReadAsString();
-        }
-
-        private static string FixHost(string urlString)
-        {
-            urlString = urlString.TrimEnd(new[] { '/' });
-
-            if (!Uri.IsWellFormedUriString(urlString, UriKind.RelativeOrAbsolute) && !urlString.Contains("://"))
-            {
-                urlString = "http://" + urlString;
-            }
-
-            return urlString;
+            return new CouchResponseMessage
+                       {
+                           Content = message.Content.ReadAsString(),
+                           StatusCode = message.StatusCode,
+                           ContentType = message.Content.ContentType,
+                           ETag = message.Headers.ETag.Tag ?? string.Empty
+                       };
         }
 
         #endregion

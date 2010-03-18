@@ -45,9 +45,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Enums\HttpVerb.cs" />
+    <Compile Include="HttpVerb.cs" />
     <Compile Include="ICouchConnection.cs" />
+    <Compile Include="ICouchResponseMessage.cs" />
     <Compile Include="Impl\CouchConnection.cs" />
+    <Compile Include="Impl\CouchResponseMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
