@@ -22,6 +22,7 @@ namespace CouchNet.Tests
         private Mock<ICouchResponseMessage> _revisionLimitGetResponse;
         private Mock<ICouchResponseMessage> _revisionLimitErrorResponse;
         private Mock<ICouchResponseMessage> _revisionLimitSetResponse;
+        private Mock<ICouchResponseMessage> _addDocumentResponse;
 
         [SetUp]
         public void Setup()
@@ -34,7 +35,7 @@ namespace CouchNet.Tests
                 IsAlive = true,
                 Name = "Bob Smith"
             };
-    
+
             _basicResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
             _basicResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
             _basicResponse.Setup(s => s.Content).Returns("{\"name\":\"Bob Smith\",\"age\":23,\"isAlive\":true,\"_id\":\"abc123\",\"_rev\":\"946B7D1C\"}");
@@ -71,6 +72,10 @@ namespace CouchNet.Tests
             _revisionLimitErrorResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.NotFound);
             _revisionLimitErrorResponse.Setup(s => s.Content).Returns("1000");
 
+            _addDocumentResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _addDocumentResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.Created);
+            _addDocumentResponse.Setup(s => s.Content).Returns("{\"ok\":true, \"id\":\"some_doc_id\", \"rev\":\"2774761002\"}");
+
         }
 
         [Test]
@@ -79,7 +84,7 @@ namespace CouchNet.Tests
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             var db = new CouchDatabase<ExampleEntity>(_connectionMock.Object, "UnItTeSt");
             Assert.IsNotNull(db);
-            Assert.AreEqual("unittest",db.Name);
+            Assert.AreEqual("unittest", db.Name);
         }
 
         [Test]
@@ -134,8 +139,8 @@ namespace CouchNet.Tests
             var db = new CouchDatabase<ExampleEntity>(_connectionMock.Object, "unittest");
             var result = db.Status();
 
-            Assert.AreEqual("unittest",result.DatabaseName);
-            Assert.AreEqual(1,result.DocumentCount);
+            Assert.AreEqual("unittest", result.DatabaseName);
+            Assert.AreEqual(1, result.DocumentCount);
             Assert.AreEqual(30, result.DocumentDeletedCount);
             Assert.AreEqual(85, result.UpdateSequence);
             Assert.AreEqual(0, result.PurgeSequence);
@@ -171,8 +176,8 @@ namespace CouchNet.Tests
 
             Assert.IsNull(result);
             Assert.IsNotNull(db.ServerResponse);
-            Assert.AreEqual("not_found",db.ServerResponse.Error);
-            Assert.AreEqual("missing",db.ServerResponse.Reason);
+            Assert.AreEqual("not_found", db.ServerResponse.Error);
+            Assert.AreEqual("missing", db.ServerResponse.Reason);
         }
 
         [Test]
@@ -186,7 +191,7 @@ namespace CouchNet.Tests
 
             Assert.IsNotNull(result);
             Assert.IsNull(result.Name);
-            Assert.AreEqual(0,result.Age);
+            Assert.AreEqual(0, result.Age);
             Assert.False(result.IsAlive);
         }
 
@@ -213,12 +218,12 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/abc123?revs=true")).Returns(_revisionsResponse.Object);
 
             var db = new CouchDatabase<ExampleEntity>(_connectionMock.Object, "unittest");
-            var result = db.Get("abc123",CouchDocumentOptions.IncludeRevisions);
+            var result = db.Get("abc123", CouchDocumentOptions.IncludeRevisions);
 
             Assert.IsNotNull(result);
             Assert.AreEqual(_exampleObject.Name, result.Name);
             Assert.AreEqual(3, result.Revisions.Start);
-            Assert.AreEqual(3,result.Revisions.RevisionIds.Length);
+            Assert.AreEqual(3, result.Revisions.RevisionIds.Length);
         }
 
         [Test]
@@ -243,7 +248,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/abc123?revs_info=true&revs=true")).Returns(_revisionInfoResponse.Object);
 
             var db = new CouchDatabase<ExampleEntity>(_connectionMock.Object, "unittest");
-            var result = db.Get("abc123", CouchDocumentOptions.RevisionInfo|CouchDocumentOptions.IncludeRevisions);
+            var result = db.Get("abc123", CouchDocumentOptions.RevisionInfo | CouchDocumentOptions.IncludeRevisions);
 
             Assert.IsNotNull(result);
             Assert.AreEqual(_exampleObject.Name, result.Name);
@@ -275,10 +280,50 @@ namespace CouchNet.Tests
         public void RevisionLimit_Set_ShouldSetValue()
         {
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
-            _connectionMock.Setup(s => s.Put("unittest/_revs_limit","1500")).Returns(_revisionLimitSetResponse.Object);
+            _connectionMock.Setup(s => s.Put("unittest/_revs_limit", "1500")).Returns(_revisionLimitSetResponse.Object);
 
             var db = new CouchDatabase<ExampleEntity>(_connectionMock.Object, "unittest");
             db.RevisionsLimit = 1500;
+        }
+
+        [Test]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void Add_NullDocument_Throws()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+
+            var db = new CouchDatabase<ExampleEntity>(_connectionMock.Object, "unittest");
+            db.Add(null);
+        }
+
+        [Test]
+        public void Add_SimpleAdd_CreatesId()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Put(It.IsAny<string>(), It.IsAny<string>())).Returns(_addDocumentResponse.Object);
+
+            var db = new CouchDatabase<ExampleEntity>(_connectionMock.Object, "unittest");
+            var result = db.Add(new ExampleEntity { Age = 22, IsAlive = false, Name = "Bob" });
+
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Ok);
+            Assert.IsNotNullOrEmpty(result.Id);
+            Assert.AreEqual("some_doc_id", result.Id);
+        }
+
+        [Test]
+        public void Add_SimpleAddWithSpecifiedId_CreatesWithId()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Put("unittest/some_doc_id", It.IsAny<string>())).Returns(_addDocumentResponse.Object);
+
+            var db = new CouchDatabase<ExampleEntity>(_connectionMock.Object, "unittest");
+            var result = db.Add(new ExampleEntity { Id = "some_doc_id", Age = 22, IsAlive = false, Name = "Bob" });
+
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Ok);
+            Assert.IsNotNullOrEmpty(result.Id);
+            Assert.AreEqual("some_doc_id",result.Id);
         }
     }
 }

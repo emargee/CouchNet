@@ -12,7 +12,7 @@ namespace CouchNet.Model
         public string Revision { get; set; }
 
         [JsonProperty(PropertyName = "_deleted")]
-        public bool IsDeleted { get; set; }
+        public bool? IsDeleted { get; set; }
 
         [JsonProperty(PropertyName = "_revisions")]
         public CouchDocumentRevisions Revisions { get; set; }
