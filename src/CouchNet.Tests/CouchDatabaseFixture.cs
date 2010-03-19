@@ -23,6 +23,7 @@ namespace CouchNet.Tests
         private Mock<ICouchResponseMessage> _revisionLimitErrorResponse;
         private Mock<ICouchResponseMessage> _revisionLimitSetResponse;
         private Mock<ICouchResponseMessage> _addDocumentResponse;
+        private Mock<ICouchResponseMessage> _addConflictDocumentResponse;
 
         [SetUp]
         public void Setup()
@@ -75,6 +76,10 @@ namespace CouchNet.Tests
             _addDocumentResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
             _addDocumentResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.Created);
             _addDocumentResponse.Setup(s => s.Content).Returns("{\"ok\":true, \"id\":\"some_doc_id\", \"rev\":\"2774761002\"}");
+
+            _addConflictDocumentResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _addConflictDocumentResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.Conflict);
+            _addConflictDocumentResponse.Setup(s => s.Content).Returns("{\"error\":\"conflict\",\"reason\":\"Document update conflict.\"}");
 
         }
 
@@ -324,6 +329,42 @@ namespace CouchNet.Tests
             Assert.IsTrue(result.Ok);
             Assert.IsNotNullOrEmpty(result.Id);
             Assert.AreEqual("some_doc_id",result.Id);
+        }
+
+        [Test]
+        public void Add_Conflict_HandleError()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Put("unittest/some_doc_id", It.IsAny<string>())).Returns(_addConflictDocumentResponse.Object);
+
+            var db = new CouchDatabase<ExampleEntity>(_connectionMock.Object, "unittest");
+            var result = db.Add(new ExampleEntity { Id = "some_doc_id", Age = 22, IsAlive = false, Name = "Bob" });
+
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Ok);
+            Assert.IsNullOrEmpty(result.Id);
+            Assert.AreEqual("conflict",result.Error);
+            Assert.AreEqual("Document update conflict.",result.Reason);
+        }
+
+        [Test]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void Save_NullDocument_Throws()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+
+            var db = new CouchDatabase<ExampleEntity>(_connectionMock.Object, "unittest");
+            db.Save(null);
+        }
+
+        [Test]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void Save_DocumentNoRevision_Throws()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+
+            var db = new CouchDatabase<ExampleEntity>(_connectionMock.Object, "unittest");
+            db.Save(new ExampleEntity { Id = "some_doc_id", Age = 22, IsAlive = false, Name = "Bob" });
         }
     }
 }

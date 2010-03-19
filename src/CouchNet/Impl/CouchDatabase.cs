@@ -7,9 +7,6 @@ using Newtonsoft.Json;
 
 //  A database must be named with all lowercase characters (a-z), digits (0-9), or any of the _$()+-/ characters and must end with a slash in the URL 
 //
-// Implement: _view_cleanup
-// Implement: _compact (POST - Returns 202)
-//
 // Ref: http://books.couchdb.org/relax/reference/change-notifications
 // Implement: _changes
 // Implement: _changes?since=3 (default:0)
@@ -46,6 +43,8 @@ namespace CouchNet.Impl
             }
         }
 
+        #region ctor
+
         public CouchDatabase(ICouchConnection connection, string databaseName)
         {
             if (connection == null || string.IsNullOrEmpty(databaseName))
@@ -65,22 +64,9 @@ namespace CouchNet.Impl
             Name = databaseName;
         }
 
-        public CouchDatabaseStatus Status()
-        {
-            var path = Name;
-            var response = _connection.Get(path);
+        #endregion
 
-            if (response.StatusCode != HttpStatusCode.OK)
-            {
-                if (response.Content.Contains("\"error\""))
-                {
-                    ServerResponse = JsonConvert.DeserializeObject<CouchServerResponse>(response.Content);
-                }
-                return null;
-            }
-
-            return JsonConvert.DeserializeObject<CouchDatabaseStatus>(response.Content);
-        }
+        #region CRUD methods
 
         public T Get(string id)
         {
@@ -148,8 +134,104 @@ namespace CouchNet.Impl
                 throw new ArgumentNullException();
             }
 
-            return Save(document, false);    
+            return Save(document, false);
         }
+
+        public CouchServerResponse Delete(string id, string revision)
+        {
+            if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(revision))
+            {
+                throw new ArgumentNullException();
+            }
+
+            var qs = new QueryString().Add("rev", revision);
+
+            var path = string.Format("{0}/{1}{2}", Name, id, qs);
+            var response = _connection.Delete(path);
+
+            ServerResponse = JsonConvert.DeserializeObject<CouchServerResponse>(response.Content);
+
+            return ServerResponse;
+        }
+
+        public CouchServerResponse Delete(T document)
+        {
+            if (document == null)
+            {
+                throw new ArgumentNullException();
+            }
+
+            if (string.IsNullOrEmpty(document.Revision))
+            {
+                throw new InvalidOperationException("Deleting an existing document requires a 'revision'(_rev) value.");
+            }
+
+            var qs = new QueryString().Add("rev", document.Revision);
+
+            var path = string.Format("{0}/{1}{2}", Name, document.Id, qs);
+            var response = _connection.Delete(path);
+
+            ServerResponse = JsonConvert.DeserializeObject<CouchServerResponse>(response.Content);
+
+            return ServerResponse;
+        }
+
+        #endregion
+
+        #region Database Utilities
+
+        public CouchDatabaseStatus Status()
+        {
+            var path = Name;
+            var response = _connection.Get(path);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                if (response.Content.Contains("\"error\""))
+                {
+                    ServerResponse = JsonConvert.DeserializeObject<CouchServerResponse>(response.Content);
+                }
+                return null;
+            }
+
+            return JsonConvert.DeserializeObject<CouchDatabaseStatus>(response.Content);
+        }
+
+        public bool BeginCompact()
+        {
+            var path = string.Format("{0}/_compact", Name);
+            var response = _connection.Post(path, null);
+
+            if(response.StatusCode != HttpStatusCode.Accepted)
+            {
+                if (response.Content.Contains("\"error\""))
+                {
+                    ServerResponse = JsonConvert.DeserializeObject<CouchServerResponse>(response.Content);
+                }
+                return false;        
+            }
+
+            return true;
+        }
+
+        public bool BeginViewCleanup()
+        {
+            var path = string.Format("{0}/_view_cleanup", Name);
+            var response = _connection.Post(path, null);
+
+            if (response.StatusCode != HttpStatusCode.Accepted)
+            {
+                if (response.Content.Contains("\"error\""))
+                {
+                    ServerResponse = JsonConvert.DeserializeObject<CouchServerResponse>(response.Content);
+                }
+                return false;
+            }
+
+            return true;
+        }
+
+        #endregion
 
         #region Private Methods
 
