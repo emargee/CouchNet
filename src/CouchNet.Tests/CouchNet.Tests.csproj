@@ -55,7 +55,6 @@
   <ItemGroup>
     <Compile Include="CouchConnectionFixture.cs" />
     <Compile Include="CouchDatabaseFixture.cs" />
-    <Compile Include="ExampleFixture.cs" />
     <Compile Include="Model\ExampleEntity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
