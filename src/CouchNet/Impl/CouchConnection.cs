@@ -118,7 +118,7 @@ namespace CouchNet.Impl
         {
             string authInfo = userName + ":" + password;
             authInfo = Convert.ToBase64String(Encoding.Default.GetBytes(authInfo));
-            Client.DefaultHeaders.Authorization = new Credential("Basic",authInfo);
+            Client.DefaultHeaders.Authorization = new Credential("Basic", authInfo);
         }
 
         public void DisableCache()
@@ -168,13 +168,22 @@ namespace CouchNet.Impl
                     }
             }
 
-            return new CouchResponseMessage
-                       {
-                           Content = message.Content.ReadAsString(),
-                           StatusCode = message.StatusCode,
-                           ContentType = message.Content.ContentType,
-                           ETag = message.Headers.ETag.Tag ?? string.Empty
-                       };
+            var response = new CouchResponseMessage();
+
+            if(message.Content != null)
+            {
+                response.Content = message.Content.ReadAsString();
+                response.ContentType = message.Content.ContentType ?? string.Empty;
+            }
+
+            response.StatusCode = message.StatusCode;     
+
+            if(message.Headers.ETag != null)
+            {
+                response.ETag = message.Headers.ETag.Tag;
+            }
+
+            return response;
         }
 
         #endregion

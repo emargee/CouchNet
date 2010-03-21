@@ -15,12 +15,12 @@ using Newtonsoft.Json;
 // Implement: _changes?timeout=60000 (default:60000) milliseconds
 // Implement: _changes?filter=app/important (default:none) - _filter on a view.
 // Implement: _changes?include_docs=true (default:false) - include document with result.
-// 
+//
 //=========================================
 
 namespace CouchNet.Impl
 {
-    public class CouchDatabase<T> : ICouchDatabase<T> where T : CouchDocument
+    public class CouchDatabase : ICouchDatabase
     {
         private readonly ICouchConnection _connection;
 
@@ -68,17 +68,17 @@ namespace CouchNet.Impl
 
         #region CRUD methods
 
-        public T Get(string id)
+        public T Get<T>(string id) where T : ICouchDocument
         {
             if (string.IsNullOrEmpty(id))
             {
                 throw new ArgumentNullException();
             }
 
-            return Get(id, new QueryString());
+            return Get<T>(id, new QueryString());
         }
 
-        public T Get(string id, string revision)
+        public T Get<T>(string id, string revision) where T : ICouchDocument
         {
             if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(revision))
             {
@@ -92,10 +92,10 @@ namespace CouchNet.Impl
                 qs.Add("rev", revision);
             }
 
-            return Get(id, qs);
+            return Get<T>(id, qs);
         }
 
-        public T Get(string id, CouchDocumentOptions options)
+        public T Get<T>(string id, CouchDocumentOptions options) where T : ICouchDocument
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -114,30 +114,30 @@ namespace CouchNet.Impl
                 qs.Add("revs", "true");
             }
 
-            return Get(id, qs);
+            return Get<T>(id, qs);
         }
 
-        public CouchServerResponse Add(T document)
+        public void Add(ICouchDocument document)
         {
             if (document == null)
             {
                 throw new ArgumentNullException();
             }
 
-            return Save(document, true);
+            Save(document, true);
         }
 
-        public CouchServerResponse Save(T document)
+        public void Save(ICouchDocument document)
         {
             if (document == null)
             {
                 throw new ArgumentNullException();
             }
 
-            return Save(document, false);
+            Save(document, false);
         }
 
-        public CouchServerResponse Delete(string id, string revision)
+        public void Delete(string id, string revision)
         {
             if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(revision))
             {
@@ -150,11 +150,9 @@ namespace CouchNet.Impl
             var response = _connection.Delete(path);
 
             ServerResponse = JsonConvert.DeserializeObject<CouchServerResponse>(response.Content);
-
-            return ServerResponse;
         }
 
-        public CouchServerResponse Delete(T document)
+        public void Delete(ICouchDocument document)
         {
             if (document == null)
             {
@@ -172,8 +170,6 @@ namespace CouchNet.Impl
             var response = _connection.Delete(path);
 
             ServerResponse = JsonConvert.DeserializeObject<CouchServerResponse>(response.Content);
-
-            return ServerResponse;
         }
 
         #endregion
@@ -235,13 +231,8 @@ namespace CouchNet.Impl
 
         #region Private Methods
 
-        private CouchServerResponse Save(T document, bool isNew)
+        private void Save(ICouchDocument document, bool isNew)
         {
-            if (document == null)
-            {
-                throw new ArgumentNullException();
-            }
-
             if (!isNew && string.IsNullOrEmpty(document.Revision))
             {
                 throw new InvalidOperationException("Updating an existing document requires a 'revision'(_rev) value.");
@@ -269,23 +260,12 @@ namespace CouchNet.Impl
             var response = _connection.Put(path, jsonString);
 
             ServerResponse = JsonConvert.DeserializeObject<CouchServerResponse>(response.Content);
-
-            return ServerResponse;
         }
 
-        private T Get(string id, QueryString queryString)
+        private T Get<T>(string id, QueryString queryString) where T : ICouchDocument
         {
-            if (string.IsNullOrEmpty(id))
-            {
-                throw new ArgumentNullException();
-            }
-
-            if (queryString == null)
-            {
-                queryString = new QueryString();
-            }
-
             var path = string.Format("{0}/{1}{2}", Name, id, queryString);
+
             var response = _connection.Get(path);
 
             if (response.StatusCode != HttpStatusCode.OK)
@@ -294,7 +274,7 @@ namespace CouchNet.Impl
                 {
                     ServerResponse = JsonConvert.DeserializeObject<CouchServerResponse>(response.Content);
                 }
-                return null;
+                return default(T);
             }
 
             return JsonConvert.DeserializeObject<T>(response.Content);

@@ -139,6 +139,15 @@ namespace CouchNet.Tests
         }
 
         [Test]
+        public void Header_Nulls_DoesNothing()
+        {
+            var ch = new CouchConnection("http://localhost/");
+            ch.SetHeader(null,null);
+
+            Assert.AreEqual(0, ch.Client.DefaultHeaders.Count());
+        }
+
+        [Test]
         public void Header_ClearHeader_ShouldBeZero()
         {
             var ch = new CouchConnection("http://localhost/");
@@ -176,5 +185,6 @@ namespace CouchNet.Tests
 
             Assert.AreEqual("no-cache", ch.Client.DefaultHeaders["Cache-Control"]);
         }
+
     }
 }

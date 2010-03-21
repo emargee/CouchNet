@@ -12,7 +12,7 @@ namespace CouchNet.Model
         public string Id { get; set; }
 
         [JsonProperty(PropertyName = "rev")]
-        public string Rev { get; set; }
+        public string Revision { get; set; }
 
         [JsonProperty(PropertyName = "error")]
         public string Error { get; set; }

@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{66018219-B91E-4247-B408-FDD654F9CEC4}</ProjectGuid>
+    <ProjectGuid>{F3F5B40C-802B-4B63-9682-4BA249D75223}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CouchNet</RootNamespace>
-    <AssemblyName>CouchNet</AssemblyName>
+    <RootNamespace>CouchNet.Tests.Integration</RootNamespace>
+    <AssemblyName>CouchNet.Tests.Integration</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -39,31 +39,24 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="nunit.framework, Version=2.5.3.9345, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\nunit.framework.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Enums\CouchDocumentOptions.cs" />
-    <Compile Include="Enums\CouchDocumentRevisionStatus.cs" />
-    <Compile Include="Enums\HttpVerb.cs" />
-    <Compile Include="Extensions\Extensions.cs" />
-    <Compile Include="ICouchConnection.cs" />
-    <Compile Include="ICouchDatabase.cs" />
-    <Compile Include="ICouchDocument.cs" />
-    <Compile Include="ICouchResponseMessage.cs" />
-    <Compile Include="Impl\CouchConnection.cs" />
-    <Compile Include="Impl\CouchDatabase.cs" />
-    <Compile Include="Impl\CouchResponseMessage.cs" />
-    <Compile Include="Model\CouchDatabaseStatus.cs" />
-    <Compile Include="Impl\CouchDocument.cs" />
-    <Compile Include="Model\CouchDocumentRevisionInfo.cs" />
-    <Compile Include="Model\CouchDocumentRevisions.cs" />
-    <Compile Include="Model\CouchServerResponse.cs" />
+    <Compile Include="BasicFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utils\QueryString.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CouchNet\CouchNet.csproj">
+      <Project>{66018219-B91E-4247-B408-FDD654F9CEC4}</Project>
+      <Name>CouchNet</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

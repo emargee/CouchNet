@@ -1,9 +1,10 @@
+using CouchNet.Model;
 using Newtonsoft.Json;
 
-namespace CouchNet.Model
+namespace CouchNet.Impl
 {
     [JsonObject]
-    public class CouchDocument
+    public class CouchDocument : ICouchDocument
     {
         [JsonProperty(PropertyName = "_id")]
         public string Id { get; set; }

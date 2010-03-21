@@ -1,3 +1,4 @@
+using CouchNet.Impl;
 using CouchNet.Model;
 using Newtonsoft.Json;
 
