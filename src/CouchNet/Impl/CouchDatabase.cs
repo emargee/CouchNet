@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
+using System.Linq;
 using CouchNet.Enums;
 using CouchNet.Model;
 using CouchNet.Utils;
@@ -117,6 +119,70 @@ namespace CouchNet.Impl
             return Get<T>(id, qs);
         }
 
+        public IEnumerable<ICouchDocument> GetAll()
+        {
+            return GetAll(null, null, null, null);
+        }
+
+        public IEnumerable<ICouchDocument> GetAll(int? limit, string startkey, string endkey, bool? descending)
+        {
+            var qs = new QueryString();
+
+            if (limit.HasValue)
+            {
+                qs.Add("limit", limit.ToString());
+            }
+
+            if (!string.IsNullOrEmpty(startkey))
+            {
+                qs.Add("startkey", "\"" + startkey + "\"");
+            }
+
+            if (!string.IsNullOrEmpty(endkey))
+            {
+                qs.Add("endkey", "\"" + endkey + "\"");
+            }
+
+            if (descending.HasValue)
+            {
+                qs.Add("descending", descending.ToString().ToLower());
+            }
+
+            var path = string.Format("{0}/_all_docs", Name);
+
+            if (qs.Count > 0)
+            {
+                path = path + qs;
+            }
+
+            var response = _connection.Get(path);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                if (response.Content.Contains("\"error\""))
+                {
+                    ServerResponse = JsonConvert.DeserializeObject<CouchServerResponse>(response.Content);
+                }
+
+                return new ICouchDocument[0];
+            }
+
+            var result = JsonConvert.DeserializeObject<CouchViewResults<RevisionSegment>>(response.Content, _settings);
+
+            return result.Rows.Select(row => new SimpleCouchDocument { Id = row.Id, Revision = row.Value.Revision }).Cast<ICouchDocument>();
+        }
+
+        //public IEnumerable<T> GetAll<T>()
+        //public IEnumerable<T> GetAll<T>(int? limit, string startkey, string endkey, bool? descending)
+
+        //public IEnumerable<ICouchDocument> GetAllBySequence()
+        //public IEnumerable<ICouchDocument> GetAllBySequence(int? limit, string startkey, string endkey, bool? descending
+
+        //public IEnumerable<T> GetSelected<T>(IEnumerable<string> ids)
+
+        //void Add(IEnumerable<ICouchDocument> documents, bool AllOrNothing)
+        //void Save(IEnumerable<ICouchDocument> documents, bool AllOrNothing)
+
         public void Add(ICouchDocument document)
         {
             if (document == null)
@@ -174,7 +240,17 @@ namespace CouchNet.Impl
 
         #endregion
 
-        #region Database Utilities
+        #region Other
+
+        public int Count()
+        {
+            var status = Status();
+            return status != null ? Status().DocumentCount : -1;
+        }
+
+        #endregion
+
+        #region Database Utility Methods
 
         public CouchDatabaseStatus Status()
         {
@@ -198,13 +274,13 @@ namespace CouchNet.Impl
             var path = string.Format("{0}/_compact", Name);
             var response = _connection.Post(path, null);
 
-            if(response.StatusCode != HttpStatusCode.Accepted)
+            if (response.StatusCode != HttpStatusCode.Accepted)
             {
                 if (response.Content.Contains("\"error\""))
                 {
                     ServerResponse = JsonConvert.DeserializeObject<CouchServerResponse>(response.Content);
                 }
-                return false;        
+                return false;
             }
 
             return true;

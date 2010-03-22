@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net;
 using CouchNet.Enums;
 using CouchNet.Impl;
@@ -34,6 +35,8 @@ namespace CouchNet.Tests
         private Mock<ICouchResponseMessage> _viewCleanErrorResponse;
         private Mock<ICouchResponseMessage> _deleteDocumentResponse;
         private Mock<ICouchResponseMessage> _deleteDocumentErrorResponse;
+        private Mock<ICouchResponseMessage> _getAllIdsResponse;
+        private Mock<ICouchResponseMessage> _getAllIdsErrorResponse;
 
         [SetUp]
         public void Setup()
@@ -127,6 +130,14 @@ namespace CouchNet.Tests
             _deleteDocumentErrorResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.Conflict);
             _deleteDocumentErrorResponse.Setup(s => s.Content).Returns("{\"error\":\"conflict\",\"reason\":\"Document update conflict.\"}");
 
+            _getAllIdsResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _getAllIdsResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
+            _getAllIdsResponse.Setup(s => s.Content).Returns("{\"total_rows\":2,\"offset\":0,\"rows\":[{\"id\":\"4c51bc81501dd2ee3d20e981a8000562\",\"key\":\"4c51bc81501dd2ee3d20e981a8000562\",\"value\":{\"rev\":\"1-0aaca901d8459d637c4cdc143dc49f65\"}},{\"id\":\"attachment_doc\",\"key\":\"attachment_doc\",\"value\":{\"rev\":\"2-dce2006ce41f3ab6c3e6e3b9e6bca1cb\"}}]}");
+
+            _getAllIdsErrorResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _getAllIdsErrorResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.NotFound);
+            _getAllIdsErrorResponse.Setup(s => s.Content).Returns("{\"error\":\"not_found\",\"reason\":\"missing\"}");
+
         }
 
         [Test]
@@ -208,6 +219,30 @@ namespace CouchNet.Tests
             Assert.AreEqual(53339, result.DiskSize);
             Assert.AreEqual("1268879146201288", result.InstanceStartTime);
             Assert.AreEqual(4, result.DiskFormatVersion);
+        }
+
+        [Test]
+        public void Count_Get_ReturnsValue()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Get("unittest")).Returns(_statusResponse.Object);
+
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+            var result = db.Count();
+
+            Assert.AreEqual(1, result);
+        }
+
+        [Test]
+        public void Count_Error_ReturnsNegative()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Get("unittest")).Returns(_statusErrorResponse.Object);
+
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+            var result = db.Count();
+
+            Assert.AreEqual(-1, result);
         }
 
         [Test]
@@ -587,6 +622,47 @@ namespace CouchNet.Tests
 
             Assert.IsNotNull(db.ServerResponse);
             Assert.IsFalse(db.ServerResponse.Ok);    
+        }
+
+        [Test]
+        public void GetAll_Get_CanParse()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Get("unittest/_all_docs")).Returns(_getAllIdsResponse.Object);
+
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+            var results = db.GetAll().ToList();
+
+            Assert.NotNull(results);
+            Assert.AreEqual(2, results.Count());
+            Assert.AreEqual("4c51bc81501dd2ee3d20e981a8000562", results[0].Id);
+            Assert.AreEqual("1-0aaca901d8459d637c4cdc143dc49f65", results[0].Revision);
+        }
+
+        [Test]
+        public void GetAll_WithOptions_CanParse()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Get("unittest/_all_docs?limit=10&startkey=%22test1%22&endkey=%22test52%22&descending=true")).Returns(_getAllIdsResponse.Object);
+
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+            var results = db.GetAll(10, "test1", "test52", true);
+
+            Assert.NotNull(results);
+            Assert.AreEqual(2, results.Count());
+        }
+
+        [Test]
+        public void GetAll_Error_CanHandle()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Get("unittest/_all_docs")).Returns(_getAllIdsErrorResponse.Object);
+
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+            var results = db.GetAll();
+
+            Assert.NotNull(results);
+            Assert.AreEqual(0, results.Count());
         }
     }
 }
