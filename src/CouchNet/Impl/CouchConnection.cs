@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Text;
+using System.Web.UI.WebControls;
 using Microsoft.Http;
 
 using CouchNet.Enums;
@@ -83,6 +84,16 @@ namespace CouchNet.Impl
             return Send(path, HttpVerb.Delete, null, encoding);
         }
 
+        public ICouchResponseMessage Copy(string fromPath, string newDocId)
+        {
+            return Send(fromPath, HttpVerb.Copy, newDocId, RequestEncoding);
+        }
+
+        public ICouchResponseMessage Copy(string fromPath, string newDocId, string encoding)
+        {
+            return Send(fromPath, HttpVerb.Copy, newDocId, encoding);
+        }
+
         #endregion
 
         #region Headers
@@ -159,6 +170,13 @@ namespace CouchNet.Impl
                 case (HttpVerb.Delete):
                     {
                         message = Client.Delete(path);
+                        break;
+                    }
+
+                case (HttpVerb.Copy):
+                    {
+                        Client.DefaultHeaders.Add("Destination", data);
+                        message = Client.Send(new HttpRequestMessage("COPY", path));
                         break;
                     }
 

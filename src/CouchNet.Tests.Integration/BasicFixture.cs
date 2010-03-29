@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using CouchNet.Impl;
+using CouchNet.Tests.Integration.Model;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
@@ -87,11 +88,5 @@ namespace CouchNet.Tests.Integration
         
     }
 
-    public class BusinessCard : CouchDocument
-    {
-        [JsonProperty(PropertyName = "name")]
-        public string Name { get; set; }
-        public string JobTitle { get; set; }
-        public string Employer { get; set; }
-    }
+
 }

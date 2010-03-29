@@ -5,6 +5,7 @@ namespace CouchNet.Enums
         Get,
         Put,
         Post,
-        Delete
+        Delete,
+        Copy
     }
 }

@@ -37,6 +37,8 @@ namespace CouchNet.Tests
         private Mock<ICouchResponseMessage> _deleteDocumentErrorResponse;
         private Mock<ICouchResponseMessage> _getAllIdsResponse;
         private Mock<ICouchResponseMessage> _getAllIdsErrorResponse;
+        private Mock<ICouchResponseMessage> _getAllObjResponse;
+        private Mock<ICouchResponseMessage> _getAllObjMixedResponse;
 
         [SetUp]
         public void Setup()
@@ -138,6 +140,13 @@ namespace CouchNet.Tests
             _getAllIdsErrorResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.NotFound);
             _getAllIdsErrorResponse.Setup(s => s.Content).Returns("{\"error\":\"not_found\",\"reason\":\"missing\"}");
 
+            _getAllObjResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _getAllObjResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
+            _getAllObjResponse.Setup(s => s.Content).Returns("{\"total_rows\":2,\"offset\":0,\"rows\":[{\"id\":\"abc123\",\"key\":\"abc123\",\"value\":{\"rev\":\"1-946B7D1C\"},\"doc\":{\"name\":\"Fred Smith\",\"age\":23,\"isAlive\":true,\"_id\":\"abc123\",\"_rev\":\"1-946B7D1C\"} },{\"id\":\"abc456\",\"key\":\"abc456\",\"value\":{\"rev\":\"2-DCE2006C\"},\"doc\":{\"name\":\"Bill Smith\",\"age\":27,\"isAlive\":true,\"_id\":\"abc456\",\"_rev\":\"2-DCE2006C\"} }]}");
+
+            _getAllObjMixedResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _getAllObjMixedResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
+            _getAllObjMixedResponse.Setup(s => s.Content).Returns("{\"total_rows\":2,\"offset\":0,\"rows\":[{\"id\":\"abc123\",\"key\":\"abc123\",\"value\":{\"rev\":\"1-946B7D1C\"},\"doc\":{\"name\":\"Fred Smith\",\"age\":23,\"isAlive\":true,\"_id\":\"abc123\",\"_rev\":\"1-946B7D1C\"} },{\"id\":\"abc456\",\"key\":\"abc456\",\"value\":{\"rev\":\"2-DCE2006C\"},\"doc\":{\"_id\": \"abc456\",\"_rev\": \"2-DCE2006C\",\"Name\": \"Billy Bob\",\"Telephone\": 1234,\"Fax\": 5678} }]}");
         }
 
         [Test]
@@ -228,7 +237,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest")).Returns(_statusResponse.Object);
 
             var db = new CouchDatabase(_connectionMock.Object, "unittest");
-            var result = db.Count();
+            var result = db.DocumentCount();
 
             Assert.AreEqual(1, result);
         }
@@ -240,7 +249,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest")).Returns(_statusErrorResponse.Object);
 
             var db = new CouchDatabase(_connectionMock.Object, "unittest");
-            var result = db.Count();
+            var result = db.DocumentCount();
 
             Assert.AreEqual(-1, result);
         }
@@ -660,6 +669,47 @@ namespace CouchNet.Tests
 
             var db = new CouchDatabase(_connectionMock.Object, "unittest");
             var results = db.GetAll();
+
+            Assert.NotNull(results);
+            Assert.AreEqual(0, results.Count());
+        }
+
+        [Test]
+        public void GetAllObj_Get_CanParse()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Get("unittest/_all_docs?include_docs=true")).Returns(_getAllObjResponse.Object);
+
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+            var results = db.GetAll<ExampleEntity>();
+
+            Assert.NotNull(results);
+            Assert.AreEqual(2, results.Count());
+            Assert.AreEqual("Fred Smith", results.ToList()[0].Name);
+            Assert.AreEqual("Bill Smith", results.ToList()[1].Name);
+        }
+
+        [Test]
+        public void GetAllObj_WithOptions_CanParse()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Get("unittest/_all_docs?limit=10&startkey=%22test1%22&endkey=%22test52%22&descending=true&include_docs=true")).Returns(_getAllObjResponse.Object);
+
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+            var results = db.GetAll<ExampleEntity>(10, "test1", "test52", true);
+            Assert.AreEqual(2, results.Count());
+            Assert.AreEqual("Fred Smith", results.ToList()[0].Name);
+            Assert.AreEqual("Bill Smith", results.ToList()[1].Name);
+        }
+
+        [Test]
+        public void GetAllObj_Error_CanHandle()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Get("unittest/_all_docs?include_docs=true")).Returns(_getAllIdsErrorResponse.Object);
+
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+            var results = db.GetAll<ExampleEntity>();
 
             Assert.NotNull(results);
             Assert.AreEqual(0, results.Count());

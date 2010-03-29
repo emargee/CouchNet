@@ -68,7 +68,7 @@ namespace CouchNet.Impl
 
         #endregion
 
-        #region CRUD methods
+        #region Basic Operation Methods
 
         public T Get<T>(string id) where T : ICouchDocument
         {
@@ -167,21 +167,65 @@ namespace CouchNet.Impl
                 return new ICouchDocument[0];
             }
 
-            var result = JsonConvert.DeserializeObject<CouchViewResults<RevisionSegment>>(response.Content, _settings);
+            var result = JsonConvert.DeserializeObject<CouchViewResult<CouchResultRow<ResultFragment>>>(response.Content, _settings);
 
             return result.Rows.Select(row => new SimpleCouchDocument { Id = row.Id, Revision = row.Value.Revision }).Cast<ICouchDocument>();
         }
 
-        //public IEnumerable<T> GetAll<T>()
-        //public IEnumerable<T> GetAll<T>(int? limit, string startkey, string endkey, bool? descending)
+        public IEnumerable<T> GetAll<T>()
+        {
+            return GetAll<T>(null, null, null, null);
+        }
+        
+        public IEnumerable<T> GetAll<T>(int? limit, string startkey, string endkey, bool? descending)
+        {
+            var qs = new QueryString();
+
+            if (limit.HasValue)
+            {
+                qs.Add("limit", limit.ToString());
+            }
+
+            if (!string.IsNullOrEmpty(startkey))
+            {
+                qs.Add("startkey", "\"" + startkey + "\"");
+            }
+
+            if (!string.IsNullOrEmpty(endkey))
+            {
+                qs.Add("endkey", "\"" + endkey + "\"");
+            }
+
+            if (descending.HasValue)
+            {
+                qs.Add("descending", descending.ToString().ToLower());
+            }
+
+            qs.Add("include_docs", "true");
+
+            var path = string.Format("{0}/_all_docs{1}", Name, qs);
+
+            var response = _connection.Get(path);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                if (response.Content.Contains("\"error\""))
+                {
+                    ServerResponse = JsonConvert.DeserializeObject<CouchServerResponse>(response.Content);
+                }
+
+                return new List<T>();
+            }
+
+            var result = JsonConvert.DeserializeObject<CouchViewResult<CouchBulkResultRow<T>>>(response.Content, _settings);
+
+            return result.Rows.Select(row => row.Document);
+        }
 
         //public IEnumerable<ICouchDocument> GetAllBySequence()
         //public IEnumerable<ICouchDocument> GetAllBySequence(int? limit, string startkey, string endkey, bool? descending
 
-        //public IEnumerable<T> GetSelected<T>(IEnumerable<string> ids)
-
-        //void Add(IEnumerable<ICouchDocument> documents, bool AllOrNothing)
-        //void Save(IEnumerable<ICouchDocument> documents, bool AllOrNothing)
+        //public IEnumerable<T> GetSelected<T>(IEnumerable<string> ids)     
 
         public void Add(ICouchDocument document)
         {
@@ -193,6 +237,8 @@ namespace CouchNet.Impl
             Save(document, true);
         }
 
+        //void Add(IEnumerable<ICouchDocument> documents, bool AllOrNothing)
+
         public void Save(ICouchDocument document)
         {
             if (document == null)
@@ -202,6 +248,8 @@ namespace CouchNet.Impl
 
             Save(document, false);
         }
+
+        //void Save(IEnumerable<ICouchDocument> documents, bool AllOrNothing)
 
         public void Delete(string id, string revision)
         {
@@ -238,11 +286,16 @@ namespace CouchNet.Impl
             ServerResponse = JsonConvert.DeserializeObject<CouchServerResponse>(response.Content);
         }
 
+        //public void Copy(string fromId, string toId)
+        //public void Copy(ICouchDocument from, string toId)
+        //public void Copy(string fromId, string toId, string revision)
+        //public void Copy(ICouchDocument from, ICouchDocument to)
+        
         #endregion
 
         #region Other
 
-        public int Count()
+        public int DocumentCount()
         {
             var status = Status();
             return status != null ? Status().DocumentCount : -1;
