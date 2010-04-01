@@ -121,10 +121,15 @@ namespace CouchNet.Impl
 
         public IEnumerable<ICouchDocument> GetAll()
         {
-            return GetAll(null, null, null, null);
+            return GetAll(null, null, null, null, null);
         }
 
-        public IEnumerable<ICouchDocument> GetAll(int? limit, string startkey, string endkey, bool? descending)
+        public IEnumerable<ICouchDocument> GetAll(bool bySequence)
+        {
+            return GetAll(null, null, null, null, bySequence);
+        }
+
+        public IEnumerable<ICouchDocument> GetAll(int? limit, string startkey, string endkey, bool? descending, bool? bySequence)
         {
             var qs = new QueryString();
 
@@ -150,6 +155,14 @@ namespace CouchNet.Impl
 
             var path = string.Format("{0}/_all_docs", Name);
 
+            if(bySequence.HasValue)
+            {
+                if(bySequence.Value)
+                {
+                    path = string.Format("{0}/_all_docs_by_seq", Name);    
+                }
+            }
+
             if (qs.Count > 0)
             {
                 path = path + qs;
@@ -167,17 +180,22 @@ namespace CouchNet.Impl
                 return new ICouchDocument[0];
             }
 
-            var result = JsonConvert.DeserializeObject<CouchViewResult<CouchResultRow<ResultFragment>>>(response.Content, _settings);
+            var result = JsonConvert.DeserializeObject<CouchViewResult<CouchResultRow<CouchDocumentDetails>>>(response.Content, _settings);
 
-            return result.Rows.Select(row => new SimpleCouchDocument { Id = row.Id, Revision = row.Value.Revision }).Cast<ICouchDocument>();
+            return result.Rows.Select(row => new CouchDocument { Id = row.Id, Revision = row.Value.Revision, Conflicts = row.Value.Conflicts, IsDeleted = row.Value.IsDeleted, DeletedConflicts = row.Value.DeletedConflicts }).Cast<ICouchDocument>();
         }
 
         public IEnumerable<T> GetAll<T>()
         {
-            return GetAll<T>(null, null, null, null);
+            return GetAll<T>(null, null, null, null, null);
+        }
+
+        public IEnumerable<T> GetAll<T>(bool bySequence)
+        {
+            return GetAll<T>(null, null, null, null, bySequence);
         }
         
-        public IEnumerable<T> GetAll<T>(int? limit, string startkey, string endkey, bool? descending)
+        public IEnumerable<T> GetAll<T>(int? limit, string startkey, string endkey, bool? descending, bool? bySequence)
         {
             var qs = new QueryString();
 
@@ -219,11 +237,8 @@ namespace CouchNet.Impl
 
             var result = JsonConvert.DeserializeObject<CouchViewResult<CouchBulkResultRow<T>>>(response.Content, _settings);
 
-            return result.Rows.Select(row => row.Document);
+            return result.Rows.SkipWhile(s => s.Value.IsDeleted == true).Select(row => row.Document);
         }
-
-        //public IEnumerable<ICouchDocument> GetAllBySequence()
-        //public IEnumerable<ICouchDocument> GetAllBySequence(int? limit, string startkey, string endkey, bool? descending
 
         //public IEnumerable<T> GetSelected<T>(IEnumerable<string> ids)     
 
@@ -287,9 +302,11 @@ namespace CouchNet.Impl
         }
 
         //public void Copy(string fromId, string toId)
-        //public void Copy(ICouchDocument from, string toId)
         //public void Copy(string fromId, string toId, string revision)
-        //public void Copy(ICouchDocument from, ICouchDocument to)
+        //public void Copy(ICouchDocument from, string toId)
+
+        //public void Move(string fromId, string toId)
+        //public void Move(ICouchDocument from, string toId)
         
         #endregion
 

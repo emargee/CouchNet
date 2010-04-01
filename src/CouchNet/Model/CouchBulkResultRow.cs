@@ -21,7 +21,7 @@ namespace CouchNet.Model
         }
 
         [JsonProperty(PropertyName = "value")]
-        public ResultFragment Value { get; set; }
+        public CouchDocumentDetails Value { get; set; }
 
         [JsonProperty(PropertyName = "doc")]
         public T Document { get; set; }

@@ -65,8 +65,7 @@
     <Compile Include="Model\CouchResultRow.cs" />
     <Compile Include="Model\CouchViewResult.cs" />
     <Compile Include="Model\CouchServerResponse.cs" />
-    <Compile Include="Impl\SimpleCouchDocument.cs" />
-    <Compile Include="Model\ResultFragment.cs" />
+    <Compile Include="Model\CouchDocumentDetails.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\QueryString.cs" />
   </ItemGroup>

@@ -655,7 +655,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/_all_docs?limit=10&startkey=%22test1%22&endkey=%22test52%22&descending=true")).Returns(_getAllIdsResponse.Object);
 
             var db = new CouchDatabase(_connectionMock.Object, "unittest");
-            var results = db.GetAll(10, "test1", "test52", true);
+            var results = db.GetAll(10, "test1", "test52", true, false);
 
             Assert.NotNull(results);
             Assert.AreEqual(2, results.Count());
@@ -696,7 +696,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/_all_docs?limit=10&startkey=%22test1%22&endkey=%22test52%22&descending=true&include_docs=true")).Returns(_getAllObjResponse.Object);
 
             var db = new CouchDatabase(_connectionMock.Object, "unittest");
-            var results = db.GetAll<ExampleEntity>(10, "test1", "test52", true);
+            var results = db.GetAll<ExampleEntity>(10, "test1", "test52", true, false);
             Assert.AreEqual(2, results.Count());
             Assert.AreEqual("Fred Smith", results.ToList()[0].Name);
             Assert.AreEqual("Bill Smith", results.ToList()[1].Name);
@@ -713,6 +713,22 @@ namespace CouchNet.Tests
 
             Assert.NotNull(results);
             Assert.AreEqual(0, results.Count());
+        }
+
+        [Test]
+        public void GetAllBySeq_Get_CanParse()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Get("unittest/_all_docs_by_seq")).Returns(_getAllIdsResponse.Object);
+
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+            var results = db.GetAll(true);
+        }
+
+        [Test]
+        public void GetBySeqObj_DeletedItem_SkipsMissing()
+        {
+            
         }
     }
 }

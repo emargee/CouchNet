@@ -20,5 +20,11 @@ namespace CouchNet.Impl
 
         [JsonProperty(PropertyName = "_revs_info")]
         public CouchDocumentRevisionInfo[] RevisionsInfo { get; set; }
+
+        [JsonProperty(PropertyName = "_conflicts")]
+        public string[] Conflicts { get; set; }
+
+        [JsonProperty(PropertyName = "_deleted_conflicts")]
+        public string[] DeletedConflicts { get; set; }
     }
 }
