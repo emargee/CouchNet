@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using CouchNet.Impl;
 using CouchNet.Tests.Integration.Model;
 using Newtonsoft.Json;
@@ -25,37 +26,37 @@ namespace CouchNet.Tests.Integration
 
             var card = new BusinessCard {Name = "Bob Smith", Employer = "GiantMart", JobTitle = "Manager"};
 
-            db.Add(card);
+            var resp = db.Add(card);
 
-            if(db.ServerResponse.Ok)
+            if(resp.IsOk)
             {
-                Debug.WriteLine("Added ! Id : " + db.ServerResponse.Id + " / Revision: " + db.ServerResponse.Revision );
+                Debug.WriteLine("Added ! Id : " + resp.Id + " / Revision: " + resp.Revision );
             }
             else
             {
-                Debug.WriteLine("Problem updating : " + db.ServerResponse.Error + " / Reason : " + db.ServerResponse.Reason);
+                Debug.WriteLine("Problem updating : " + db.ErrorResponse.Error + " / Reason : " + db.ErrorResponse.Reason);
             }
             
             // -- RETREIVEING & UPDATING -- 
 
-            var newCard = db.Get<BusinessCard>(db.ServerResponse.Id);
+            var newCard = db.Get<BusinessCard>(resp.Id);
 
             newCard.Name = "Bobbyd Smith";
 
-            db.Save(newCard);
+            resp = db.Save(newCard);
 
-            if(db.ServerResponse.Ok)
+            if(resp.IsOk)
             {
-                Debug.WriteLine("Updated ! Id : " + db.ServerResponse.Id + " / Revision: " + db.ServerResponse.Revision);    
+                Debug.WriteLine("Updated ! Id : " + resp.Id + " / Revision: " + resp.Revision);    
             }
 
             // -- DELETEING --
 
-            db.Delete(db.ServerResponse.Id, db.ServerResponse.Revision);
+            resp = db.Delete(resp.Id, resp.Revision);
 
-            if(db.ServerResponse.Ok)
+            if(resp.IsOk)
             {
-                Debug.WriteLine("Deleted ! Id : " + db.ServerResponse.Id + " / Revision: " + db.ServerResponse.Revision);
+                Debug.WriteLine("Deleted ! Id : " + resp.Id + " / Revision: " + resp.Revision);
             }           
         }
 
@@ -85,7 +86,7 @@ namespace CouchNet.Tests.Integration
 
         }
 
-        
+
     }
 
 

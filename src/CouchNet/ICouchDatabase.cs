@@ -6,20 +6,27 @@ namespace CouchNet
 {
     public interface ICouchDatabase
     {
-        CouchServerResponse ServerResponse { get; }     
+        CouchServerResponse ErrorResponse { get; }     
         CouchDatabaseStatus Status();
 
         T Get<T>(string id) where T : ICouchDocument;
         T Get<T>(string id, string revision) where T : ICouchDocument;
         T Get<T>(string id, CouchDocumentOptions options) where T : ICouchDocument;
 
-        //IEnumerable<T> GetAll<T>();
+        IEnumerable<T> GetSelected<T>(IEnumerable<string> ids) where T : ICouchDocument;
+               
+        IEnumerable<T> GetAll<T>() where T : ICouchDocument;
+        IEnumerable<T> GetAll<T>(int? limit, string startkey, string endkey, bool? descending) where T : ICouchDocument;
 
-        void Add(ICouchDocument document);
-        
-        void Save(ICouchDocument document);
-        
-        void Delete(ICouchDocument document);
-        void Delete(string id, string revision);
+        CouchServerResponse Add(ICouchDocument document);
+        IEnumerable<CouchServerResponse> Add(IEnumerable<ICouchDocument> document);
+
+        CouchServerResponse Save(ICouchDocument document);
+        IEnumerable<CouchServerResponse> Save(IEnumerable<ICouchDocument> document);
+
+        CouchServerResponse Delete(ICouchDocument document);
+        CouchServerResponse Delete(string id, string revision);
+
+        CouchServerResponse Copy(string fromId, string toId, string revision);
     }
 }

@@ -1,5 +1,4 @@
 using CouchNet.Impl;
-using CouchNet.Model;
 using Newtonsoft.Json;
 
 namespace CouchNet.Tests.Model

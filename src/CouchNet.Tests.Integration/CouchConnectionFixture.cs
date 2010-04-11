@@ -15,14 +15,14 @@ namespace CouchNet.Tests.Integration
             var db = new CouchDatabase(conn, "unittest");
             var card = new BusinessCard { Name = "Billy Smith", Employer = "Smith Industries", JobTitle = "Eating Horses" };
 
-            db.Add(card);
+            var response = db.Add(card);
 
-            if(db.ServerResponse.Ok)
+            if(response.IsOk)
             {
-                card = db.Get<BusinessCard>(db.ServerResponse.Id);
+                card = db.Get<BusinessCard>(response.Id);
                 Assert.IsNotNullOrEmpty(card.Id);
 
-                var response = conn.Copy("/unittest/" + card.Id, card.Id + "-22");
+                var resp = conn.Copy("/unittest/" + card.Id, card.Id + "-22");
             }
         }
     }

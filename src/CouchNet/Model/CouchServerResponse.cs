@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace CouchNet.Model
@@ -6,7 +7,7 @@ namespace CouchNet.Model
     public class CouchServerResponse
     {
         [JsonProperty(PropertyName = "ok")]
-        public bool Ok { get; set; }
+        public bool IsOk { get; set; }
 
         [JsonProperty(PropertyName = "id")]
         public string Id { get; set; }

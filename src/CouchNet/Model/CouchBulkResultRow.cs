@@ -21,7 +21,7 @@ namespace CouchNet.Model
         }
 
         [JsonProperty(PropertyName = "value")]
-        public CouchDocumentDetails Value { get; set; }
+        public CouchDocumentSummary Value { get; set; }
 
         [JsonProperty(PropertyName = "doc")]
         public T Document { get; set; }

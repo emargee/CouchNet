@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="BasicFixture.cs" />
     <Compile Include="CouchConnectionFixture.cs" />
+    <Compile Include="CouchDatabaseFixture.cs" />
     <Compile Include="Model\BusinessCard.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
