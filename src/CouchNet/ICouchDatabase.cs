@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using CouchNet.Enums;
-using CouchNet.Model;
 
 namespace CouchNet
 {

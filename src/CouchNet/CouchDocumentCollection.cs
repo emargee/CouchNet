@@ -1,9 +1,7 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace CouchNet.Model
+namespace CouchNet
 {
     [JsonObject]
     public class CouchDocumentCollection<T> where T : ICouchDocument

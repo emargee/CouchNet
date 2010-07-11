@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Net;
 using System.Linq;
 using CouchNet.Enums;
-using CouchNet.Model;
 using CouchNet.Utils;
 using Newtonsoft.Json;
 
@@ -428,6 +427,12 @@ namespace CouchNet.Impl
         //public void Move(string fromId, string toId)
         //public void Move(ICouchDocument from, string toId)
         
+        #endregion
+
+        #region View Methods
+
+
+
         #endregion
 
         #region Other

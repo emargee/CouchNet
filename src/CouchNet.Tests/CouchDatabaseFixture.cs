@@ -3,7 +3,6 @@ using System.Linq;
 using System.Net;
 using CouchNet.Enums;
 using CouchNet.Impl;
-using CouchNet.Model;
 using CouchNet.Tests.Model;
 using Moq;
 using NUnit.Framework;

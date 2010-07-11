@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace CouchNet.Model
+namespace CouchNet
 {
     [JsonObject]
     public class CouchViewResult<T>
