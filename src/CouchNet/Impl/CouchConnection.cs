@@ -2,16 +2,15 @@ using System;
 using System.Net;
 using System.Text;
 using System.Web.UI.WebControls;
-using Microsoft.Http;
 
-using CouchNet.Enums;
-using Microsoft.Http.Headers;
+using CouchNet.HttpTransport;
+using CouchNet.HttpTransport.Impl;
 
 namespace CouchNet.Impl
 {
     public class CouchConnection : ICouchConnection
     {
-        internal HttpClient Client;
+        internal readonly IHttpTransport Transport;
 
         #region Private Properties
 
@@ -27,71 +26,75 @@ namespace CouchNet.Impl
 
         public CouchConnection(string url) : this(new UriBuilder(url).Uri) { }
 
+        public CouchConnection(string url, IHttpTransportFactory factory) : this(new UriBuilder(url).Uri, "application/json", factory) { }
+
         public CouchConnection(string host, int port) : this(new UriBuilder(host) { Port = port }.Uri) { }
 
         public CouchConnection(string host, int port, string encoding) : this(new UriBuilder(host) { Port = port }.Uri, encoding) { }
 
         public CouchConnection(Uri uri) : this(uri, "application/json") { }
 
-        public CouchConnection(Uri uri, string encoding)
+        public CouchConnection(Uri uri, string encoding) : this(uri, encoding, new HttpTransportFactory()) { }
+
+        public CouchConnection(Uri uri, string encoding, IHttpTransportFactory factory)
         {
             BaseAddress = uri;
             RequestEncoding = encoding;
-            Client = new HttpClient(BaseAddress);
+            Transport = factory.Create(BaseAddress);
         }
 
         #endregion
 
         #region Interface Methods
 
-        public ICouchResponseMessage Get(string path)
+        public IHttpResponse Get(string path)
         {
-            return Send(path, HttpVerb.Get, null, RequestEncoding);
+            return Transport.Send(path, HttpVerb.Get, null, RequestEncoding);
         }
 
-        public ICouchResponseMessage Get(string path, string encoding)
+        public IHttpResponse Get(string path, string encoding)
         {
-            return Send(path, HttpVerb.Get, null, encoding);
+            return Transport.Send(path, HttpVerb.Get, null, encoding);
         }
 
-        public ICouchResponseMessage Put(string path, string data)
+        public IHttpResponse Put(string path, string data)
         {
-            return Send(path, HttpVerb.Put, data, RequestEncoding);
+            return Transport.Send(path, HttpVerb.Put, data, RequestEncoding);
         }
 
-        public ICouchResponseMessage Put(string path, string data, string encoding)
+        public IHttpResponse Put(string path, string data, string encoding)
         {
-            return Send(path, HttpVerb.Put, data, encoding);
+            return Transport.Send(path, HttpVerb.Put, data, encoding);
         }
 
-        public ICouchResponseMessage Post(string path, string data)
+        public IHttpResponse Post(string path, string data)
         {
-            return Send(path, HttpVerb.Post, data, RequestEncoding);
+            return Transport.Send(path, HttpVerb.Post, data, RequestEncoding);
         }
 
-        public ICouchResponseMessage Post(string path, string data, string encoding)
+        public IHttpResponse Post(string path, string data, string encoding)
         {
-            return Send(path, HttpVerb.Post, data, encoding);
+            return Transport.Send(path, HttpVerb.Post, data, encoding);
         }
 
-        public ICouchResponseMessage Delete(string path)
+        public IHttpResponse Delete(string path)
         {
-            return Send(path, HttpVerb.Delete, null, RequestEncoding);
+            return Transport.Send(path, HttpVerb.Delete, null, RequestEncoding);
         }
 
-        public ICouchResponseMessage Delete(string path, string encoding)
+        public IHttpResponse Delete(string path, string encoding)
         {
-            return Send(path, HttpVerb.Delete, null, encoding);
+            return Transport.Send(path, HttpVerb.Delete, null, encoding);
         }
 
-        public ICouchResponseMessage Copy(string fromPath, string newDocId)
+        public IHttpResponse Copy(string fromPath, string newDocId)
         {
-            return Send(fromPath, HttpVerb.Copy, newDocId, RequestEncoding);
+            return Transport.Send(fromPath, HttpVerb.Copy, newDocId, RequestEncoding);
         }
 
-        public ICouchResponseMessage Copy(string fromPath, string newDocId, string encoding)
+        public IHttpResponse Copy(string fromPath, string newDocId, string encoding)
         {
-            return Send(fromPath, HttpVerb.Copy, newDocId, encoding);
+            return Transport.Send(fromPath, HttpVerb.Copy, newDocId, encoding);
         }
 
         #endregion
@@ -100,108 +103,27 @@ namespace CouchNet.Impl
 
         public void ClearHeaders()
         {
-            Client.DefaultHeaders.Clear();
+            Transport.ClearHeaders();
         }
 
         public void SetHeader(string key, string value)
         {
-            if (key == null || value == null)
-            {
-                return;
-            }
-
-            if (Client.DefaultHeaders.ContainsKey(key))
-            {
-                Client.DefaultHeaders[key] = value;
-            }
-            else
-            {
-                Client.DefaultHeaders.Add(key, value);
-            }
+            Transport.AddHeader(key, value);
         }
 
         public void SetCredentials(NetworkCredential credential)
         {
-            SetCredentials(credential.UserName, credential.Password);
+            Transport.SetCredentials(credential.UserName, credential.Password);
         }
 
         public void SetCredentials(string userName, string password)
         {
-            string authInfo = userName + ":" + password;
-            authInfo = Convert.ToBase64String(Encoding.Default.GetBytes(authInfo));
-            Client.DefaultHeaders.Authorization = new Credential("Basic", authInfo);
+            Transport.SetCredentials(userName, password);
         }
 
         public void DisableCache()
         {
             SetHeader("Cache-Control", "no-cache");
-        }
-
-        #endregion
-
-        #region Private Methods
-
-        private ICouchResponseMessage Send(string path, HttpVerb method, string data, string encoding)
-        {
-            ServicePointManager.Expect100Continue = false;
-
-            HttpResponseMessage message;
-
-            switch (method)
-            {
-                case (HttpVerb.Get):
-                    {
-                        message = Client.Get(path);
-                        break;
-                    }
-
-                case (HttpVerb.Post):
-                    {
-                        message = Client.Post(path, encoding, HttpContent.Create(data));
-                        break;
-                    }
-
-                case (HttpVerb.Put):
-                    {
-                        message = Client.Put(path, encoding, HttpContent.Create(data));
-                        break;
-                    }
-
-                case (HttpVerb.Delete):
-                    {
-                        message = Client.Delete(path);
-                        break;
-                    }
-
-                case (HttpVerb.Copy):
-                    {
-                        Client.DefaultHeaders.Add("Destination", data);
-                        message = Client.Send(new HttpRequestMessage("COPY", path));
-                        break;
-                    }
-
-                default:
-                    {
-                        throw new NotImplementedException("Unknown/Unsupported HTTP verb.");
-                    }
-            }
-
-            var response = new CouchResponseMessage();
-
-            if(message.Content != null)
-            {
-                response.Content = message.Content.ReadAsString();
-                response.ContentType = message.Content.ContentType ?? string.Empty;
-            }
-
-            response.StatusCode = message.StatusCode;     
-
-            if(message.Headers.ETag != null)
-            {
-                response.ETag = message.Headers.ETag.Tag;
-            }
-
-            return response;
         }
 
         #endregion

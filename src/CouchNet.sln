@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CouchNet.Tests", "CouchNet.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CouchNet.Tests.Integration", "CouchNet.Tests.Integration\CouchNet.Tests.Integration.csproj", "{F3F5B40C-802B-4B63-9682-4BA249D75223}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CouchNetHttpTransport", "CouchNetHttpTransport\CouchNetHttpTransport.csproj", "{3A3A22EA-9192-4792-80D9-83C41F3462C6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,12 +31,17 @@ Global
 		{F3F5B40C-802B-4B63-9682-4BA249D75223}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F3F5B40C-802B-4B63-9682-4BA249D75223}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F3F5B40C-802B-4B63-9682-4BA249D75223}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A3A22EA-9192-4792-80D9-83C41F3462C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A3A22EA-9192-4792-80D9-83C41F3462C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A3A22EA-9192-4792-80D9-83C41F3462C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A3A22EA-9192-4792-80D9-83C41F3462C6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{66018219-B91E-4247-B408-FDD654F9CEC4} = {C3589DDF-8A49-4799-9060-877F92D7A974}
+		{3A3A22EA-9192-4792-80D9-83C41F3462C6} = {C3589DDF-8A49-4799-9060-877F92D7A974}
 		{6D6D1408-D4DC-4BCF-9FF2-7C1B89328A8E} = {A378FEF4-B63E-43AE-8A4C-84875A0C0F89}
 		{F3F5B40C-802B-4B63-9682-4BA249D75223} = {A378FEF4-B63E-43AE-8A4C-84875A0C0F89}
 	EndGlobalSection

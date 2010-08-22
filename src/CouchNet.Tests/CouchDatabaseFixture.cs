@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Net;
 using CouchNet.Enums;
+using CouchNet.HttpTransport;
 using CouchNet.Impl;
 using CouchNet.Tests.Model;
 using Moq;
@@ -14,33 +15,33 @@ namespace CouchNet.Tests
     {
         private ExampleEntity _exampleObject;
         private Mock<ICouchConnection> _connectionMock;
-        private Mock<ICouchResponseMessage> _basicResponse;
-        private Mock<ICouchResponseMessage> _notFoundResponse;
-        private Mock<ICouchResponseMessage> _missingFieldResponse;
-        private Mock<ICouchResponseMessage> _revisionsResponse;
-        private Mock<ICouchResponseMessage> _revisionInfoResponse;
-        private Mock<ICouchResponseMessage> _statusResponse;
-        private Mock<ICouchResponseMessage> _revisionLimitGetResponse;
-        private Mock<ICouchResponseMessage> _revisionLimitErrorResponse;
-        private Mock<ICouchResponseMessage> _revisionLimitSetResponse;
-        private Mock<ICouchResponseMessage> _addDocumentResponse;
-        private Mock<ICouchResponseMessage> _addConflictDocumentResponse;
-        private Mock<ICouchResponseMessage> _revisionLimitCastErrorResponse;
-        private Mock<ICouchResponseMessage> _revisionLimitSetErrorResponse;
-        private Mock<ICouchResponseMessage> _statusErrorResponse;
-        private Mock<ICouchResponseMessage> _compactResponse;
-        private Mock<ICouchResponseMessage> _viewCleanResponse;
-        private Mock<ICouchResponseMessage> _compactErrorResponse;
-        private Mock<ICouchResponseMessage> _viewCleanErrorResponse;
-        private Mock<ICouchResponseMessage> _deleteDocumentResponse;
-        private Mock<ICouchResponseMessage> _deleteDocumentErrorResponse;
-        private Mock<ICouchResponseMessage> _getAllIdsResponse;
-        private Mock<ICouchResponseMessage> _getAllIdsErrorResponse;
-        private Mock<ICouchResponseMessage> _getAllObjResponse;
-        private Mock<ICouchResponseMessage> _getAllObjMixedResponse;
-        private Mock<ICouchResponseMessage> _getSelectedResponse;
-        private Mock<ICouchResponseMessage> _bulkAddResponse;
-        private Mock<ICouchResponseMessage> _bulkAddNoIdsResponse;
+        private Mock<IHttpResponse> _basicResponse;
+        private Mock<IHttpResponse> _notFoundResponse;
+        private Mock<IHttpResponse> _missingFieldResponse;
+        private Mock<IHttpResponse> _revisionsResponse;
+        private Mock<IHttpResponse> _revisionInfoResponse;
+        private Mock<IHttpResponse> _statusResponse;
+        private Mock<IHttpResponse> _revisionLimitGetResponse;
+        private Mock<IHttpResponse> _revisionLimitErrorResponse;
+        private Mock<IHttpResponse> _revisionLimitSetResponse;
+        private Mock<IHttpResponse> _addDocumentResponse;
+        private Mock<IHttpResponse> _addConflictDocumentResponse;
+        private Mock<IHttpResponse> _revisionLimitCastErrorResponse;
+        private Mock<IHttpResponse> _revisionLimitSetErrorResponse;
+        private Mock<IHttpResponse> _statusErrorResponse;
+        private Mock<IHttpResponse> _compactResponse;
+        private Mock<IHttpResponse> _viewCleanResponse;
+        private Mock<IHttpResponse> _compactErrorResponse;
+        private Mock<IHttpResponse> _viewCleanErrorResponse;
+        private Mock<IHttpResponse> _deleteDocumentResponse;
+        private Mock<IHttpResponse> _deleteDocumentErrorResponse;
+        private Mock<IHttpResponse> _getAllIdsResponse;
+        private Mock<IHttpResponse> _getAllIdsErrorResponse;
+        private Mock<IHttpResponse> _getAllObjResponse;
+        private Mock<IHttpResponse> _getAllObjMixedResponse;
+        private Mock<IHttpResponse> _getSelectedResponse;
+        private Mock<IHttpResponse> _bulkAddResponse;
+        private Mock<IHttpResponse> _bulkAddNoIdsResponse;
 
         [SetUp]
         public void Setup()
@@ -54,113 +55,113 @@ namespace CouchNet.Tests
                 Name = "Bob Smith"
             };
 
-            _basicResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _basicResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _basicResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
-            _basicResponse.Setup(s => s.Content).Returns("{\"name\":\"Bob Smith\",\"age\":23,\"isAlive\":true,\"_id\":\"abc123\",\"_rev\":\"946B7D1C\"}");
+            _basicResponse.Setup(s => s.Data).Returns("{\"name\":\"Bob Smith\",\"age\":23,\"isAlive\":true,\"_id\":\"abc123\",\"_rev\":\"946B7D1C\"}");
 
-            _missingFieldResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _missingFieldResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _missingFieldResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
-            _missingFieldResponse.Setup(s => s.Content).Returns("{\"_id\":\"abc123\",\"_rev\":\"946B7D1C\"}");
+            _missingFieldResponse.Setup(s => s.Data).Returns("{\"_id\":\"abc123\",\"_rev\":\"946B7D1C\"}");
 
-            _notFoundResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _notFoundResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _notFoundResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.NotFound);
-            _notFoundResponse.Setup(s => s.Content).Returns("{\"error\":\"not_found\",\"reason\":\"missing\"}");
+            _notFoundResponse.Setup(s => s.Data).Returns("{\"error\":\"not_found\",\"reason\":\"missing\"}");
 
-            _revisionsResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _revisionsResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _revisionsResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
-            _revisionsResponse.Setup(s => s.Content).Returns("{\"name\":\"Bob Smith\",\"age\":23,\"isAlive\":true,\"_id\":\"abc123\",\"_rev\":\"946B7D1C\",\"_revisions\":{\"start\":3,\"ids\":[\"54c962f10a96d251fa5ef6bddc4c98cc\",\"9f7bedc5be50f1e745a7cfa4696507fd\",\"b587febf4b8d4a36493e6a9b41261a4c\"]}}");
+            _revisionsResponse.Setup(s => s.Data).Returns("{\"name\":\"Bob Smith\",\"age\":23,\"isAlive\":true,\"_id\":\"abc123\",\"_rev\":\"946B7D1C\",\"_revisions\":{\"start\":3,\"ids\":[\"54c962f10a96d251fa5ef6bddc4c98cc\",\"9f7bedc5be50f1e745a7cfa4696507fd\",\"b587febf4b8d4a36493e6a9b41261a4c\"]}}");
 
-            _revisionInfoResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _revisionInfoResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _revisionInfoResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
-            _revisionInfoResponse.Setup(s => s.Content).Returns("{\"name\":\"Bob Smith\",\"age\":23,\"isAlive\":true,\"_id\":\"abc123\",\"_rev\":\"946B7D1C\",\"_revs_info\":[{\"rev\":\"3-54c962f10a96d251fa5ef6bddc4c98cc\",\"status\":\"available\"},{\"rev\":\"2-9f7bedc5be50f1e745a7cfa4696507fd\",\"status\":\"missing\"},{\"rev\":\"1-b587febf4b8d4a36493e6a9b41261a4c\",\"status\":\"available\"}]}");
+            _revisionInfoResponse.Setup(s => s.Data).Returns("{\"name\":\"Bob Smith\",\"age\":23,\"isAlive\":true,\"_id\":\"abc123\",\"_rev\":\"946B7D1C\",\"_revs_info\":[{\"rev\":\"3-54c962f10a96d251fa5ef6bddc4c98cc\",\"status\":\"available\"},{\"rev\":\"2-9f7bedc5be50f1e745a7cfa4696507fd\",\"status\":\"missing\"},{\"rev\":\"1-b587febf4b8d4a36493e6a9b41261a4c\",\"status\":\"available\"}]}");
 
-            _statusResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _statusResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _statusResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
-            _statusResponse.Setup(s => s.Content).Returns("{\"db_name\":\"unittest\",\"doc_count\":1,\"doc_del_count\":30,\"update_seq\":85,\"purge_seq\":0,\"compact_running\":false,\"disk_size\":53339,\"instance_start_time\":\"1268879146201288\",\"disk_format_version\":4}");
+            _statusResponse.Setup(s => s.Data).Returns("{\"db_name\":\"unittest\",\"doc_count\":1,\"doc_del_count\":30,\"update_seq\":85,\"purge_seq\":0,\"compact_running\":false,\"disk_size\":53339,\"instance_start_time\":\"1268879146201288\",\"disk_format_version\":4}");
 
-            _statusErrorResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _statusErrorResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _statusErrorResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.NotFound);
-            _statusErrorResponse.Setup(s => s.Content).Returns("{\"error\":\"not_found\",\"reason\":\"missing\"}");
+            _statusErrorResponse.Setup(s => s.Data).Returns("{\"error\":\"not_found\",\"reason\":\"missing\"}");
 
-            _revisionLimitGetResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _revisionLimitGetResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _revisionLimitGetResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
-            _revisionLimitGetResponse.Setup(s => s.Content).Returns("1000");
+            _revisionLimitGetResponse.Setup(s => s.Data).Returns("1000");
 
-            _revisionLimitSetResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _revisionLimitSetResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _revisionLimitSetResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.Accepted);
-            _revisionLimitSetResponse.Setup(s => s.Content).Returns("1000");
+            _revisionLimitSetResponse.Setup(s => s.Data).Returns("1000");
 
-            _revisionLimitSetErrorResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _revisionLimitSetErrorResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _revisionLimitSetErrorResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.NotFound);
-            _revisionLimitSetErrorResponse.Setup(s => s.Content).Returns("{\"error\":\"not_found\",\"reason\":\"missing\"}");
+            _revisionLimitSetErrorResponse.Setup(s => s.Data).Returns("{\"error\":\"not_found\",\"reason\":\"missing\"}");
 
-            _revisionLimitErrorResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _revisionLimitErrorResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _revisionLimitErrorResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.NotFound);
-            _revisionLimitErrorResponse.Setup(s => s.Content).Returns("{\"error\":\"not_found\",\"reason\":\"missing\"}");
+            _revisionLimitErrorResponse.Setup(s => s.Data).Returns("{\"error\":\"not_found\",\"reason\":\"missing\"}");
 
-            _revisionLimitCastErrorResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _revisionLimitCastErrorResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _revisionLimitCastErrorResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
-            _revisionLimitCastErrorResponse.Setup(s => s.Content).Returns("Chickens");
+            _revisionLimitCastErrorResponse.Setup(s => s.Data).Returns("Chickens");
 
-            _addDocumentResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _addDocumentResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _addDocumentResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.Created);
-            _addDocumentResponse.Setup(s => s.Content).Returns("{\"ok\":true, \"id\":\"some_doc_id\", \"rev\":\"2774761002\"}");
+            _addDocumentResponse.Setup(s => s.Data).Returns("{\"ok\":true, \"id\":\"some_doc_id\", \"rev\":\"2774761002\"}");
 
-            _addConflictDocumentResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _addConflictDocumentResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _addConflictDocumentResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.Conflict);
-            _addConflictDocumentResponse.Setup(s => s.Content).Returns("{\"error\":\"conflict\",\"reason\":\"Document update conflict.\"}");
+            _addConflictDocumentResponse.Setup(s => s.Data).Returns("{\"error\":\"conflict\",\"reason\":\"Document update conflict.\"}");
 
-            _compactResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _compactResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _compactResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.Accepted);
-            _compactResponse.Setup(s => s.Content).Returns("{\"ok\":true}");
+            _compactResponse.Setup(s => s.Data).Returns("{\"ok\":true}");
 
-            _compactErrorResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _compactErrorResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _compactErrorResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.NotFound);
-            _compactErrorResponse.Setup(s => s.Content).Returns("{\"error\":\"not_found\",\"reason\":\"missing\"}");
+            _compactErrorResponse.Setup(s => s.Data).Returns("{\"error\":\"not_found\",\"reason\":\"missing\"}");
 
-            _viewCleanResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _viewCleanResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _viewCleanResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.Accepted);
-            _viewCleanResponse.Setup(s => s.Content).Returns("{\"ok\":true}");
+            _viewCleanResponse.Setup(s => s.Data).Returns("{\"ok\":true}");
 
-            _viewCleanErrorResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _viewCleanErrorResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _viewCleanErrorResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.NotFound);
-            _viewCleanErrorResponse.Setup(s => s.Content).Returns("{\"error\":\"not_found\",\"reason\":\"missing\"}");
+            _viewCleanErrorResponse.Setup(s => s.Data).Returns("{\"error\":\"not_found\",\"reason\":\"missing\"}");
 
-            _deleteDocumentResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _deleteDocumentResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _deleteDocumentResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
-            _deleteDocumentResponse.Setup(s => s.Content).Returns("{\"ok\":true,\"id\":\"some_id\",\"rev\":\"2-1234\"}");
+            _deleteDocumentResponse.Setup(s => s.Data).Returns("{\"ok\":true,\"id\":\"some_id\",\"rev\":\"2-1234\"}");
 
-            _deleteDocumentErrorResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _deleteDocumentErrorResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _deleteDocumentErrorResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.Conflict);
-            _deleteDocumentErrorResponse.Setup(s => s.Content).Returns("{\"error\":\"conflict\",\"reason\":\"Document update conflict.\"}");
+            _deleteDocumentErrorResponse.Setup(s => s.Data).Returns("{\"error\":\"conflict\",\"reason\":\"Document update conflict.\"}");
 
-            _getAllIdsResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _getAllIdsResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _getAllIdsResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
-            _getAllIdsResponse.Setup(s => s.Content).Returns("{\"total_rows\":2,\"offset\":0,\"rows\":[{\"id\":\"4c51bc81501dd2ee3d20e981a8000562\",\"key\":\"4c51bc81501dd2ee3d20e981a8000562\",\"value\":{\"rev\":\"1-0aaca901d8459d637c4cdc143dc49f65\"}},{\"id\":\"attachment_doc\",\"key\":\"attachment_doc\",\"value\":{\"rev\":\"2-dce2006ce41f3ab6c3e6e3b9e6bca1cb\"}}]}");
+            _getAllIdsResponse.Setup(s => s.Data).Returns("{\"total_rows\":2,\"offset\":0,\"rows\":[{\"id\":\"4c51bc81501dd2ee3d20e981a8000562\",\"key\":\"4c51bc81501dd2ee3d20e981a8000562\",\"value\":{\"rev\":\"1-0aaca901d8459d637c4cdc143dc49f65\"}},{\"id\":\"attachment_doc\",\"key\":\"attachment_doc\",\"value\":{\"rev\":\"2-dce2006ce41f3ab6c3e6e3b9e6bca1cb\"}}]}");
 
-            _getAllIdsErrorResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _getAllIdsErrorResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _getAllIdsErrorResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.NotFound);
-            _getAllIdsErrorResponse.Setup(s => s.Content).Returns("{\"error\":\"not_found\",\"reason\":\"missing\"}");
+            _getAllIdsErrorResponse.Setup(s => s.Data).Returns("{\"error\":\"not_found\",\"reason\":\"missing\"}");
 
-            _getAllObjResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _getAllObjResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _getAllObjResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
-            _getAllObjResponse.Setup(s => s.Content).Returns("{\"total_rows\":2,\"offset\":0,\"rows\":[{\"id\":\"abc123\",\"key\":\"abc123\",\"value\":{\"rev\":\"1-946B7D1C\"},\"doc\":{\"name\":\"Fred Smith\",\"age\":23,\"isAlive\":true,\"_id\":\"abc123\",\"_rev\":\"1-946B7D1C\"} },{\"id\":\"abc456\",\"key\":\"abc456\",\"value\":{\"rev\":\"2-DCE2006C\"},\"doc\":{\"name\":\"Bill Smith\",\"age\":27,\"isAlive\":true,\"_id\":\"abc456\",\"_rev\":\"2-DCE2006C\"} }]}");
+            _getAllObjResponse.Setup(s => s.Data).Returns("{\"total_rows\":2,\"offset\":0,\"rows\":[{\"id\":\"abc123\",\"key\":\"abc123\",\"value\":{\"rev\":\"1-946B7D1C\"},\"doc\":{\"name\":\"Fred Smith\",\"age\":23,\"isAlive\":true,\"_id\":\"abc123\",\"_rev\":\"1-946B7D1C\"} },{\"id\":\"abc456\",\"key\":\"abc456\",\"value\":{\"rev\":\"2-DCE2006C\"},\"doc\":{\"name\":\"Bill Smith\",\"age\":27,\"isAlive\":true,\"_id\":\"abc456\",\"_rev\":\"2-DCE2006C\"} }]}");
 
-            _getAllObjMixedResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _getAllObjMixedResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _getAllObjMixedResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
-            _getAllObjMixedResponse.Setup(s => s.Content).Returns("{\"total_rows\":2,\"offset\":0,\"rows\":[{\"id\":\"abc123\",\"key\":\"abc123\",\"value\":{\"rev\":\"1-946B7D1C\"},\"doc\":{\"name\":\"Fred Smith\",\"age\":23,\"isAlive\":true,\"_id\":\"abc123\",\"_rev\":\"1-946B7D1C\"} },{\"id\":\"abc456\",\"key\":\"abc456\",\"value\":{\"rev\":\"2-DCE2006C\"},\"doc\":{\"_id\": \"abc456\",\"_rev\": \"2-DCE2006C\",\"Name\": \"Billy Bob\",\"Telephone\": 1234,\"Fax\": 5678} }]}");
+            _getAllObjMixedResponse.Setup(s => s.Data).Returns("{\"total_rows\":2,\"offset\":0,\"rows\":[{\"id\":\"abc123\",\"key\":\"abc123\",\"value\":{\"rev\":\"1-946B7D1C\"},\"doc\":{\"name\":\"Fred Smith\",\"age\":23,\"isAlive\":true,\"_id\":\"abc123\",\"_rev\":\"1-946B7D1C\"} },{\"id\":\"abc456\",\"key\":\"abc456\",\"value\":{\"rev\":\"2-DCE2006C\"},\"doc\":{\"_id\": \"abc456\",\"_rev\": \"2-DCE2006C\",\"Name\": \"Billy Bob\",\"Telephone\": 1234,\"Fax\": 5678} }]}");
 
-            _getSelectedResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _getSelectedResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _getSelectedResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
-            _getSelectedResponse.Setup(s => s.Content).Returns("{\"total_rows\":3,\"offset\":0,\"rows\":[{\"id\":\"bar\",\"key\":\"bar\",\"value\":{\"rev\":\"1-4057566831\"},\"doc\":{\"_id\":\"bar\",\"_rev\":\"1-4057566831\",\"name\":\"jim\"}},{\"id\":\"baz\",\"key\":\"baz\",\"value\":{\"rev\":\"1-2842770487\"},\"doc\":{\"_id\":\"baz\",\"_rev\":\"1-2842770487\",\"name\":\"trunky\"}}]}");
+            _getSelectedResponse.Setup(s => s.Data).Returns("{\"total_rows\":3,\"offset\":0,\"rows\":[{\"id\":\"bar\",\"key\":\"bar\",\"value\":{\"rev\":\"1-4057566831\"},\"doc\":{\"_id\":\"bar\",\"_rev\":\"1-4057566831\",\"name\":\"jim\"}},{\"id\":\"baz\",\"key\":\"baz\",\"value\":{\"rev\":\"1-2842770487\"},\"doc\":{\"_id\":\"baz\",\"_rev\":\"1-2842770487\",\"name\":\"trunky\"}}]}");
 
-            _bulkAddResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _bulkAddResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _bulkAddResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.Created);
-            _bulkAddResponse.Setup(s => s.Content).Returns("[{\"id\":\"0\",\"rev\":\"1-f5f3f3e496c72307975a69c73fd53d42\"},{\"id\":\"1\",\"rev\":\"1-8ad0e70d5e6edd474ec190eac2376bde\"}]");
+            _bulkAddResponse.Setup(s => s.Data).Returns("[{\"id\":\"0\",\"rev\":\"1-f5f3f3e496c72307975a69c73fd53d42\"},{\"id\":\"1\",\"rev\":\"1-8ad0e70d5e6edd474ec190eac2376bde\"}]");
 
-            _bulkAddNoIdsResponse = new Mock<ICouchResponseMessage>(MockBehavior.Strict);
+            _bulkAddNoIdsResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _bulkAddNoIdsResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.Created);
-            _bulkAddNoIdsResponse.Setup(s => s.Content).Returns("[{\"id\":\"d9c308eef23bbfff46826135fb000883\",\"rev\":\"1-f5f3f3e496c72307975a69c73fd53d42\"},{\"id\":\"d9c308eef23bbfff46826135fb00131b\",\"rev\":\"1-8ad0e70d5e6edd474ec190eac2376bde\"}]");
+            _bulkAddNoIdsResponse.Setup(s => s.Data).Returns("[{\"id\":\"d9c308eef23bbfff46826135fb000883\",\"rev\":\"1-f5f3f3e496c72307975a69c73fd53d42\"},{\"id\":\"d9c308eef23bbfff46826135fb00131b\",\"rev\":\"1-8ad0e70d5e6edd474ec190eac2376bde\"}]");
 
 
         }

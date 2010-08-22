@@ -13,7 +13,7 @@ namespace CouchNet.Tests.Integration
     [TestFixture]
     public class BasicFixture
     {
-        private ILookup<string, string> testy; 
+        //private ILookup<string, string> testy; 
 
         [Test]
         [Ignore("Needs running copy of CouchDB")]

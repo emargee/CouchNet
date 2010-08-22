@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("CouchNet")]
-[assembly: AssemblyDescription("CouchDB Library")]
+[assembly: AssemblyDescription("CouchDB Library for DotNET")]
 [assembly: AssemblyCompany("The CouchNet Project")]
 [assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]

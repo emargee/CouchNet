@@ -52,10 +52,6 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Http, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\lib\Microsoft.Http.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json, Version=3.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\Newtonsoft.Json.dll</HintPath>
@@ -70,15 +66,12 @@
     <Compile Include="Enums\CouchBulkUpdateBehaviour.cs" />
     <Compile Include="Enums\CouchDocumentOptions.cs" />
     <Compile Include="Enums\CouchDocumentRevisionStatus.cs" />
-    <Compile Include="Enums\HttpVerb.cs" />
     <Compile Include="Extensions\Extensions.cs" />
     <Compile Include="ICouchConnection.cs" />
     <Compile Include="ICouchDatabase.cs" />
     <Compile Include="ICouchDocument.cs" />
-    <Compile Include="ICouchResponseMessage.cs" />
     <Compile Include="Impl\CouchConnection.cs" />
     <Compile Include="Impl\CouchDatabase.cs" />
-    <Compile Include="Impl\CouchResponseMessage.cs" />
     <Compile Include="CouchDocumentCollection.cs" />
     <Compile Include="CouchBulkResultRow.cs" />
     <Compile Include="CouchDatabaseStatus.cs" />
@@ -111,6 +104,12 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Exceptions\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CouchNetHttpTransport\CouchNetHttpTransport.csproj">
+      <Project>{3A3A22EA-9192-4792-80D9-83C41F3462C6}</Project>
+      <Name>CouchNetHttpTransport</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

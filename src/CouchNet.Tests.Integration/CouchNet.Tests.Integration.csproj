@@ -52,10 +52,6 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Http, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\lib\Microsoft.Http.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json, Version=3.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\Newtonsoft.Json.dll</HintPath>
@@ -77,6 +73,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CouchNetHttpTransport\CouchNetHttpTransport.csproj">
+      <Project>{3A3A22EA-9192-4792-80D9-83C41F3462C6}</Project>
+      <Name>CouchNetHttpTransport</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CouchNet\CouchNet.csproj">
       <Project>{66018219-B91E-4247-B408-FDD654F9CEC4}</Project>
       <Name>CouchNet</Name>
