@@ -1,9 +1,9 @@
 using Newtonsoft.Json;
 
-namespace CouchNet
+namespace CouchNet.Internal
 {
     [JsonObject]
-    public class CouchDocumentSummary
+    internal class CouchDocumentSummary : ICouchDocument
     {
         [JsonProperty(PropertyName = "id")]
         public string Id { get; set; }

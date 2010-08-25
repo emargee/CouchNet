@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace CouchNet
+namespace CouchNet.Internal
 {
     [JsonObject]
-    public class CouchDocumentCollection<T> where T : ICouchDocument
+    internal class CouchDocumentCollection<T> where T : ICouchDocument
     {
-        private List<T> _documents;
+        private readonly List<T> _documents;
 
         public CouchDocumentCollection()
         {

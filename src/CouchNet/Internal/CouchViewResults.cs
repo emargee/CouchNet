@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace CouchNet
+namespace CouchNet.Internal
 {
     [JsonObject]
-    public class CouchViewResult<T>
+    internal class CouchViewResults<T>
     {
         [JsonProperty(PropertyName = "total_rows")]
         public int TotalRows { get; set; }

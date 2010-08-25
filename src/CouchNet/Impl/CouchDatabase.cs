@@ -4,6 +4,10 @@ using System.Net;
 using System.Linq;
 using CouchNet.Enums;
 using CouchNet.HttpTransport;
+using CouchNet.Impl.ResultParsers;
+using CouchNet.Impl.ServerResponse;
+using CouchNet.Impl.ViewQueries;
+using CouchNet.Internal;
 using CouchNet.Utils;
 using Newtonsoft.Json;
 
@@ -24,17 +28,19 @@ namespace CouchNet.Impl
 {
     public class CouchDatabase : ICouchDatabase
     {
+        #region Private Instance Fields
+
         private readonly ICouchConnection _connection;
 
         private readonly JsonSerializerSettings _settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
 
         internal IHttpResponse RawResponse { get; set; }
 
+        #endregion
+
         public readonly string Name;
 
-        public CouchServerResponse ErrorResponse { get; private set; }
-
-        public CouchBulkUpdateBehaviour BulkUpdateBehaviour { get; set;}
+        public CouchBulkUpdateBehaviour BulkUpdateBehaviour { get; set; }
 
         public int RevisionsLimit
         {
@@ -125,159 +131,58 @@ namespace CouchNet.Impl
             return Get<T>(id, qs);
         }
 
-        public IEnumerable<T> GetSelected<T>(IEnumerable<string> ids) where T : ICouchDocument
+        public ICouchQueryResults<T> GetMany<T>(IEnumerable<string> ids) where T : ICouchDocument
         {
-            var qs = new QueryString { { "include_docs", "true" } };
-            var path = string.Format("{0}/_all_docs{1}", Name, qs);
-
-            var keys = new { keys = ids.ToArray() };
-            var keySerialized = JsonConvert.SerializeObject(keys);
-
-            RawResponse = _connection.Post(path, keySerialized);
-
-            if (RawResponse.StatusCode != HttpStatusCode.OK)
-            {
-                if (RawResponse.Data.Contains("\"error\""))
-                {
-                    ErrorResponse = JsonConvert.DeserializeObject<CouchServerResponse>(RawResponse.Data);
-                }
-
-                return new List<T>();
-            }
-
-            var result = JsonConvert.DeserializeObject<CouchViewResult<CouchBulkResultRow<T>>>(RawResponse.Data, _settings);
-
-            return result.Rows.SkipWhile(s => s.Value.IsDeleted == true).Select(row => row.Document);
+            var query = new MultiKeyViewQuery { Keys = ids };
+            return GetMany<T>(query);
         }
 
-        public IEnumerable<CouchDocument> GetSelected(IEnumerable<string> ids)
+        public ICouchQueryResults<CouchDocument> GetMany(IEnumerable<string> ids)
+        {
+            var query = new MultiKeyViewQuery { Keys = ids };
+            return GetMany(query);
+        }
+
+        public ICouchQueryResults<CouchDocument> GetAll()
+        {
+            return GetAll(new BaseViewQuery());
+        }
+
+        public ICouchQueryResults<CouchDocument> GetAll(BaseViewQuery query)
         {
             var path = string.Format("{0}/_all_docs", Name);
 
-            var keys = new { keys = ids.ToArray() };
-            var keySerialized = JsonConvert.SerializeObject(keys);
-
-            RawResponse = _connection.Post(path, keySerialized);
-
-            if (RawResponse.StatusCode != HttpStatusCode.OK)
+            if (!string.IsNullOrEmpty(query.ToString()))
             {
-                if (RawResponse.Data.Contains("\"error\""))
-                {
-                    ErrorResponse = JsonConvert.DeserializeObject<CouchServerResponse>(RawResponse.Data);
-                }
-
-                return new CouchDocument[0];
-            }
-
-            var result = JsonConvert.DeserializeObject<CouchViewResult<CouchResultRow<CouchDocumentSummary>>>(RawResponse.Data, _settings);
-
-            return result.Rows.Select(row => new CouchDocument { Id = row.Id, Revision = row.Value.Revision, Conflicts = row.Value.Conflicts, IsDeleted = row.Value.IsDeleted, DeletedConflicts = row.Value.DeletedConflicts });
-        }
-
-        public IEnumerable<CouchDocument> GetAll()
-        {
-            return GetAll(null, null, null, null);
-        }
-
-        public IEnumerable<CouchDocument> GetAll(int? limit, string startkey, string endkey, bool? descending)
-        {
-            var qs = new QueryString();
-
-            if (limit.HasValue)
-            {
-                qs.Add("limit", limit.ToString());
-            }
-
-            if (!string.IsNullOrEmpty(startkey))
-            {
-                qs.Add("startkey", "\"" + startkey + "\"");
-            }
-
-            if (!string.IsNullOrEmpty(endkey))
-            {
-                qs.Add("endkey", "\"" + endkey + "\"");
-            }
-
-            if (descending.HasValue)
-            {
-                qs.Add("descending", descending.ToString().ToLower());
-            }
-
-            var path = string.Format("{0}/_all_docs", Name);
-
-            if (qs.Count > 0)
-            {
-                path = path + qs;
+                path = path + query;
             }
 
             RawResponse = _connection.Get(path);
 
-            if (RawResponse.StatusCode != HttpStatusCode.OK)
-            {
-                if (RawResponse.Data.Contains("\"error\""))
-                {
-                    ErrorResponse = JsonConvert.DeserializeObject<CouchServerResponse>(RawResponse.Data);
-                }
+            var results = new CouchGeneralResultsParser().Parse(RawResponse);
 
-                return new CouchDocument[0];
-            }
-
-            var result = JsonConvert.DeserializeObject<CouchViewResult<CouchResultRow<CouchDocumentSummary>>>(RawResponse.Data, _settings);
-
-            return result.Rows.Select(row => new CouchDocument { Id = row.Id, Revision = row.Value.Revision, Conflicts = row.Value.Conflicts, IsDeleted = row.Value.IsDeleted, DeletedConflicts = row.Value.DeletedConflicts });
+            return results;
         }
 
-        public IEnumerable<T> GetAll<T>() where T : ICouchDocument
+        public ICouchQueryResults<T> GetAll<T>() where T : ICouchDocument
         {
-            return GetAll<T>(null, null, null, null);
+            return GetAll<T>(new BaseViewQuery());
         }
-        
-        public IEnumerable<T> GetAll<T>(int? limit, string startkey, string endkey, bool? descending) where T : ICouchDocument
+
+        public ICouchQueryResults<T> GetAll<T>(BaseViewQuery query) where T : ICouchDocument
         {
-            var qs = new QueryString();
+            query.IncludeDocs = true;
 
-            if (limit.HasValue)
-            {
-                qs.Add("limit", limit.ToString());
-            }
-
-            if (!string.IsNullOrEmpty(startkey))
-            {
-                qs.Add("startkey", "\"" + startkey + "\"");
-            }
-
-            if (!string.IsNullOrEmpty(endkey))
-            {
-                qs.Add("endkey", "\"" + endkey + "\"");
-            }
-
-            if (descending.HasValue)
-            {
-                qs.Add("descending", descending.ToString().ToLower());
-            }
-
-            qs.Add("include_docs", "true");
-
-            var path = string.Format("{0}/_all_docs{1}", Name, qs);
+            var path = string.Format("{0}/_all_docs{1}", Name, query);
 
             RawResponse = _connection.Get(path);
 
-            if (RawResponse.StatusCode != HttpStatusCode.OK)
-            {
-                if (RawResponse.Data.Contains("\"error\""))
-                {
-                    ErrorResponse = JsonConvert.DeserializeObject<CouchServerResponse>(RawResponse.Data);
-                }
+            var results = new CouchAllDocumentsResultsParser<T>().Parse(RawResponse);
 
-                return new List<T>();
-            }
-
-            var result = JsonConvert.DeserializeObject<CouchViewResult<CouchBulkResultRow<T>>>(RawResponse.Data, _settings);
-
-            return result.Rows.SkipWhile(s => s.Value.IsDeleted == true).Select(row => row.Document);
+            return results;
         }
 
-        public CouchServerResponse Add(ICouchDocument document)
+        public ICouchServerResponse Add(ICouchDocument document)
         {
             if (document == null)
             {
@@ -287,42 +192,36 @@ namespace CouchNet.Impl
             return Save(document, true);
         }
 
-        public IEnumerable<CouchServerResponse> Add(IEnumerable<ICouchDocument> documents)
+        public ICouchQueryResults<ICouchServerResponse> AddMany(IEnumerable<ICouchDocument> documents)
         {
             var path = string.Format("{0}/_bulk_docs", Name);
             var bulk = new CouchDocumentCollection<ICouchDocument>(documents);
 
-            if(BulkUpdateBehaviour == CouchBulkUpdateBehaviour.AllOrNothing)
+            if (BulkUpdateBehaviour == CouchBulkUpdateBehaviour.AllOrNothing)
             {
                 bulk.AllOrNothing = true;
             }
 
             RawResponse = _connection.Post(path, JsonConvert.SerializeObject(bulk, Formatting.None, _settings));
 
-            if (RawResponse.StatusCode != HttpStatusCode.Created)
-            {
-                if (RawResponse.Data.Contains("\"error\""))
-                {
-                    ErrorResponse = JsonConvert.DeserializeObject<CouchServerResponse>(RawResponse.Data);
-                }
+            var results = new CouchBulkOperationResultsParser().Parse(RawResponse);
 
-                return new CouchServerResponse[0];
-            }
-
-            return JsonConvert.DeserializeObject<IEnumerable<CouchServerResponse>>(RawResponse.Data, _settings);
+            return results;
         }
 
-        public CouchServerResponse Save(ICouchDocument document)
+        public ICouchServerResponse Save(ICouchDocument document)
         {
             if (document == null)
             {
                 throw new ArgumentNullException();
             }
 
-            return Save(document, false);
+            var returnDoc = Save(document, false);
+
+            return returnDoc;
         }
 
-        public IEnumerable<CouchServerResponse> Save(IEnumerable<ICouchDocument> documents)
+        public ICouchQueryResults<ICouchServerResponse> SaveMany(IEnumerable<ICouchDocument> documents)
         {
             if (documents.Any(doc => string.IsNullOrEmpty(doc.Revision)))
             {
@@ -339,20 +238,12 @@ namespace CouchNet.Impl
 
             RawResponse = _connection.Post(path, JsonConvert.SerializeObject(bulk, Formatting.None, _settings));
 
-            if (RawResponse.StatusCode != HttpStatusCode.Created)
-            {
-                if (RawResponse.Data.Contains("\"error\""))
-                {
-                    ErrorResponse = JsonConvert.DeserializeObject<CouchServerResponse>(RawResponse.Data);
-                }
+            var results = new CouchBulkOperationResultsParser().Parse(RawResponse);
 
-                return new CouchServerResponse[0];
-            }
-
-            return JsonConvert.DeserializeObject<IEnumerable<CouchServerResponse>>(RawResponse.Data, _settings);
+            return results;
         }
 
-        public CouchServerResponse Delete(string id, string revision)
+        public ICouchServerResponse Delete(string id, string revision)
         {
             if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(revision))
             {
@@ -364,10 +255,10 @@ namespace CouchNet.Impl
             var path = string.Format("{0}/{1}{2}", Name, id, qs);
             RawResponse = _connection.Delete(path);
 
-            return JsonConvert.DeserializeObject<CouchServerResponse>(RawResponse.Data);
+            return new CouchServerResponse(RawResponse);
         }
 
-        public CouchServerResponse Delete(ICouchDocument document)
+        public ICouchServerResponse Delete(ICouchDocument document)
         {
             if (document == null)
             {
@@ -384,20 +275,25 @@ namespace CouchNet.Impl
             var path = string.Format("{0}/{1}{2}", Name, document.Id, qs);
             RawResponse = _connection.Delete(path);
 
-            return JsonConvert.DeserializeObject<CouchServerResponse>(RawResponse.Data);
+            return new CouchServerResponse(RawResponse);
         }
 
-        public CouchServerResponse Copy(ICouchDocument from, string toId)
+        public ICouchServerResponse Copy(ICouchDocument from, string toId)
         {
+            if (from == null)
+            {
+                throw new ArgumentNullException("from");
+            }
+
             return Copy(from.Id, toId, null);
         }
 
-        public CouchServerResponse Copy(string fromId, string toId)
+        public ICouchServerResponse Copy(string fromId, string toId)
         {
             return Copy(fromId, toId, null);
         }
 
-        public CouchServerResponse Copy(string fromId, string toId, string revision)
+        public ICouchServerResponse Copy(string fromId, string toId, string revision)
         {
             if (string.IsNullOrEmpty(fromId) || string.IsNullOrEmpty(toId))
             {
@@ -406,33 +302,34 @@ namespace CouchNet.Impl
 
             var path = string.Format("{0}/{1}", Name, fromId);
 
-            if(string.IsNullOrEmpty(revision))
+            if (!string.IsNullOrEmpty(revision))
             {
-                RawResponse = _connection.Copy(path, toId + new QueryString().Add("rev", revision));    
+                RawResponse = _connection.Copy(path, toId + new QueryString().Add("rev", revision));
             }
             else
             {
-                RawResponse = _connection.Copy(path, toId);    
-            }        
-
-            var status = JsonConvert.DeserializeObject<CouchServerResponse>(RawResponse.Data);
-
-            if (RawResponse.StatusCode != HttpStatusCode.Created)
-            {
-                ErrorResponse = status;
+                RawResponse = _connection.Copy(path, toId);
             }
 
-            return status;
-        }       
+            var status = new CouchServerResponse(RawResponse);
 
-        //public void Move(string fromId, string toId)
-        //public void Move(ICouchDocument from, string toId)
-        
+            return status;
+        }
+
         #endregion
 
         #region View Methods
 
+        public ICouchQueryResults<T> ExecuteView<T>(ICouchView view, BaseViewQuery query) where T : ICouchDocument
+        {
+            var path = string.Format("{0}/{1}{2}", Name, view, query);
 
+            RawResponse = _connection.Get(path);
+
+            var results = new CouchViewResultsParser<T>().Parse(RawResponse);
+
+            return results;
+        }
 
         #endregion
 
@@ -441,69 +338,53 @@ namespace CouchNet.Impl
         public int Count()
         {
             var status = Status();
-            return status != null ? Status().DocumentCount : -1;
+            return status.IsOk ? Status().DocumentCount : -1;
         }
 
         #endregion
 
         #region Database Utility Methods
 
-        public CouchDatabaseStatus Status()
+        public CouchDatabaseStatusResponse Status()
         {
             var path = Name;
             var response = _connection.Get(path);
+
+            var status = new CouchDatabaseStatusResponse();
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 if (response.Data.Contains("\"error\""))
                 {
-                    ErrorResponse = JsonConvert.DeserializeObject<CouchServerResponse>(response.Data);
+                    status = new CouchDatabaseStatusResponse(JsonConvert.DeserializeObject<CouchRawServerResponse>(response.Data));
                 }
-                return null;
+                return status;
             }
 
-            return JsonConvert.DeserializeObject<CouchDatabaseStatus>(response.Data);
+            return new CouchDatabaseStatusResponse(response);
         }
 
-        public bool BeginCompact()
+        public ICouchServerResponse BeginCompact()
         {
             var path = string.Format("{0}/_compact", Name);
             var response = _connection.Post(path, null);
 
-            if (response.StatusCode != HttpStatusCode.Accepted)
-            {
-                if (response.Data.Contains("\"error\""))
-                {
-                    ErrorResponse = JsonConvert.DeserializeObject<CouchServerResponse>(response.Data);
-                }
-                return false;
-            }
-
-            return true;
+            return new CouchServerResponse(response);
         }
 
-        public bool BeginViewCleanup()
+        public ICouchServerResponse BeginViewCleanup()
         {
             var path = string.Format("{0}/_view_cleanup", Name);
             var response = _connection.Post(path, null);
 
-            if (response.StatusCode != HttpStatusCode.Accepted)
-            {
-                if (response.Data.Contains("\"error\""))
-                {
-                    ErrorResponse = JsonConvert.DeserializeObject<CouchServerResponse>(response.Data);
-                }
-                return false;
-            }
-
-            return true;
+            return new CouchServerResponse(response);
         }
 
         #endregion
 
         #region Private Methods
 
-        private CouchServerResponse Save(ICouchDocument document, bool isNew)
+        private ICouchServerResponse Save(ICouchDocument document, bool isNew)
         {
             if (!isNew && string.IsNullOrEmpty(document.Revision))
             {
@@ -515,7 +396,7 @@ namespace CouchNet.Impl
                 document.Id = Guid.NewGuid().ToString().ToLower().Replace("{", string.Empty).Replace("}", string.Empty).Replace("-", string.Empty);
             }
 
-            var jsonString = string.Empty;
+            string jsonString;
 
             try
             {
@@ -531,14 +412,7 @@ namespace CouchNet.Impl
 
             RawResponse = _connection.Put(path, jsonString);
 
-            var status = JsonConvert.DeserializeObject<CouchServerResponse>(RawResponse.Data);
-
-            if(RawResponse.StatusCode != HttpStatusCode.Created)
-            {
-                ErrorResponse = status;    
-            }
-
-            return status ;
+            return new CouchServerResponse(RawResponse);
         }
 
         private T Get<T>(string id, QueryString queryString) where T : ICouchDocument
@@ -549,14 +423,32 @@ namespace CouchNet.Impl
 
             if (RawResponse.StatusCode != HttpStatusCode.OK)
             {
-                if (RawResponse.Data.Contains("\"error\""))
-                {
-                    ErrorResponse = JsonConvert.DeserializeObject<CouchServerResponse>(RawResponse.Data);
-                }
                 return default(T);
             }
 
             return JsonConvert.DeserializeObject<T>(RawResponse.Data);
+        }
+
+        private ICouchQueryResults<T> GetMany<T>(MultiKeyViewQuery query) where T : ICouchDocument
+        {
+            query.IncludeDocs = true;
+            var path = string.Format("{0}/_all_docs{1}", Name, query);
+
+            RawResponse = _connection.Post(path, query.SerializeKeys());
+
+            var results = new CouchAllDocumentsResultsParser<T>().Parse(RawResponse);
+
+            return results;
+        }
+
+        public ICouchQueryResults<CouchDocument> GetMany(MultiKeyViewQuery query)
+        {
+            var path = string.Format("{0}/_all_docs", Name);
+            RawResponse = _connection.Post(path, query.SerializeKeys());
+
+            var results = new CouchGeneralResultsParser().Parse(RawResponse);
+
+            return results;
         }
 
         private int GetRevisionsLimit()
@@ -566,11 +458,6 @@ namespace CouchNet.Impl
 
             if (RawResponse.StatusCode != HttpStatusCode.OK)
             {
-                if (RawResponse.Data.Contains("\"error\""))
-                {
-                    ErrorResponse = JsonConvert.DeserializeObject<CouchServerResponse>(RawResponse.Data);
-                }
-
                 return -1;
             }
 
@@ -588,14 +475,6 @@ namespace CouchNet.Impl
         {
             var path = string.Format("{0}/{1}", Name, "_revs_limit");
             RawResponse = _connection.Put(path, limit.ToString());
-
-            if (RawResponse.StatusCode != HttpStatusCode.Accepted)
-            {
-                if (RawResponse.Data.Contains("\"error\""))
-                {
-                    ErrorResponse = JsonConvert.DeserializeObject<CouchServerResponse>(RawResponse.Data);
-                }
-            }
         }
 
         #endregion

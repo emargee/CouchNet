@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 namespace CouchNet
 {
     [JsonObject]
-    public class CouchBulkResultRow<T>
+    internal class CouchViewResultsRow<T> where T : ICouchDocument
     {
         private object _key;
 
@@ -14,16 +14,13 @@ namespace CouchNet
         public object Key
         {
             get { return _key; }
-            set 
+            set
             {
                 _key = value.GetType() == typeof(object[]) ? ((object[])value)[0] : value;
             }
         }
 
         [JsonProperty(PropertyName = "value")]
-        public CouchDocumentSummary Value { get; set; }
-
-        [JsonProperty(PropertyName = "doc")]
-        public T Document { get; set; }
+        public T Value { get; set; }
     }
 }

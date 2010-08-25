@@ -52,7 +52,7 @@ namespace CouchNet.Tests.Integration
             var card2 = new BusinessCard { Name = "Jack Smith", Employer = "MediumMart", JobTitle = "Manager" };
             var card3 = new BusinessCard { Name = "Bill Smith", Employer = "TinyMart", JobTitle = "Manager" };
 
-            var resp = db.Add(new[] {card1, card2, card3}).ToList();
+            var resp = db.AddMany(new[] {card1, card2, card3}).ToList();
             
             Assert.IsNotNull(resp);
             Assert.AreEqual(3, resp.Count);
@@ -67,7 +67,7 @@ namespace CouchNet.Tests.Integration
             card2.JobTitle = "Horse";
             card3.JobTitle = "Monkey";
 
-            resp = db.Save(new[] {card1, card2, card3}).ToList();
+            resp = db.SaveMany(new[] {card1, card2, card3}).ToList();
 
             Assert.AreEqual(3, resp.Count);
             Assert.IsTrue(resp[0].Revision.Contains("2-"));

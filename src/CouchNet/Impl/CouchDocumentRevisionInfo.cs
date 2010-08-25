@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace CouchNet
+namespace CouchNet.Impl
 {
     [JsonObject]
     public class CouchDocumentRevisionInfo

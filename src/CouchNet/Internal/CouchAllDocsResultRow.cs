@@ -1,9 +1,9 @@
 using Newtonsoft.Json;
 
-namespace CouchNet
+namespace CouchNet.Internal
 {
     [JsonObject]
-    public class CouchResultRow<T>
+    internal class CouchAllDocsResultRow<T>
     {
         private object _key;
 
@@ -14,13 +14,16 @@ namespace CouchNet
         public object Key
         {
             get { return _key; }
-            set 
+            set
             {
                 _key = value.GetType() == typeof(object[]) ? ((object[])value)[0] : value;
             }
         }
 
         [JsonProperty(PropertyName = "value")]
-        public T Value { get; set; }
+        public CouchDocumentSummary Value { get; set; }
+
+        [JsonProperty(PropertyName = "doc")]
+        public T Document { get; set; }
     }
 }

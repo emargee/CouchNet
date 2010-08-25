@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using CouchNet.Impl;
+using CouchNet.Impl.ViewQueries;
 using CouchNet.Tests.Integration.Model;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -24,19 +25,19 @@ namespace CouchNet.Tests.Integration
 
             // -- ADDING FROM NEW --- 
 
-            var card = new BusinessCard {Name = "Bob Smith", Employer = "GiantMart", JobTitle = "Manager"};
+            var card = new BusinessCard { Name = "Bob Smith", Employer = "GiantMart", JobTitle = "Manager" };
 
             var resp = db.Add(card);
 
-            if(resp.IsOk)
+            if (resp.IsOk)
             {
-                Debug.WriteLine("Added ! Id : " + resp.Id + " / Revision: " + resp.Revision );
+                Debug.WriteLine("Added ! Id : " + resp.Id + " / Revision: " + resp.Revision);
             }
             else
             {
-                Debug.WriteLine("Problem updating : " + db.ErrorResponse.Error + " / Reason : " + db.ErrorResponse.Reason);
+                Debug.WriteLine("Problem updating : " + resp.ErrorType + " / Reason : " + resp.ErrorMessage);
             }
-            
+
             // -- RETREIVEING & UPDATING -- 
 
             var newCard = db.Get<BusinessCard>(resp.Id);
@@ -45,19 +46,45 @@ namespace CouchNet.Tests.Integration
 
             resp = db.Save(newCard);
 
-            if(resp.IsOk)
+            if (resp.IsOk)
             {
-                Debug.WriteLine("Updated ! Id : " + resp.Id + " / Revision: " + resp.Revision);    
+                Debug.WriteLine("Updated ! Id : " + resp.Id + " / Revision: " + resp.Revision);
             }
 
             // -- DELETEING --
 
             resp = db.Delete(resp.Id, resp.Revision);
 
-            if(resp.IsOk)
+            if (resp.IsOk)
             {
                 Debug.WriteLine("Deleted ! Id : " + resp.Id + " / Revision: " + resp.Revision);
-            }           
+            }
+        }
+
+        [Test]
+        public void ViewSyntaxCheck()
+        {
+            var conn = new CouchConnection("http://localhost", 5984);
+            var db = new CouchDatabase(conn, "unittest");
+
+            var view = new CouchView("example", "test");
+            var query = new SingleKeyViewQuery { Key = "e99b84cd49824eaf90b5f5c164b39e12" };
+
+            var results = db.ExecuteView<BusinessCard>(view, query);
+
+            if (results.IsOk)
+            {
+                Debug.WriteLine("Error: " + results.Response.ErrorType + " / Reason : " + results.Response.ErrorMessage);
+                return;
+            }
+
+            if(results.HasResults)
+            {
+                foreach (var result in results)
+                {
+                    Debug.WriteLine("Name: " + result.Name + " - Id : " + result.Id);
+                }    
+            }
         }
 
         [Test]
