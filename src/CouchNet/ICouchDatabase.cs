@@ -1,7 +1,7 @@
 using System.Collections.Generic;
+using CouchNet.Base;
 using CouchNet.Enums;
 using CouchNet.Impl.ServerResponse;
-using CouchNet.Impl.ViewQueries;
 
 namespace CouchNet
 {

@@ -28,9 +28,17 @@ namespace CouchNet.Impl.ResultParsers
 
             var cdbResult = JsonConvert.DeserializeObject<CouchViewResults<CouchAllDocsResultRow<T>>>(rawResponse.Data, _settings);
 
-            foreach(var filteredResult in cdbResult.Rows.SkipWhile(s => s.Value.IsDeleted == true).Select(row => row.Document))
+            if (cdbResult != null && cdbResult.Rows.Count() >= 0)
             {
-                results.Add(filteredResult);
+                results.Response = new CouchServerResponse(true);
+
+                foreach (var filteredResult in cdbResult.Rows.SkipWhile(s => s.Value.IsDeleted == true).Select(row => row.Document))
+                {
+                    results.Add(filteredResult);
+                }
+
+                results.TotalRows = cdbResult.TotalRows;
+                results.Offset = cdbResult.Offset;
             }
 
             return results;

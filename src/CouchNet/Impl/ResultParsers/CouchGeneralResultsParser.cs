@@ -21,7 +21,7 @@ namespace CouchNet.Impl.ResultParsers
             {
                 if (rawResponse.Data.Contains("\"error\""))
                 {
-                    results.Response = new CouchServerResponse(JsonConvert.DeserializeObject<CouchRawServerResponse>(rawResponse.Data));
+                    results.Response = new CouchServerResponse(rawResponse);
                 }
 
                 return results;
@@ -29,9 +29,17 @@ namespace CouchNet.Impl.ResultParsers
 
             var cdbResult = JsonConvert.DeserializeObject<CouchViewResults<CouchViewResultsRow<CouchDocumentSummary>>>(rawResponse.Data, _settings);
 
-            foreach(var result in cdbResult.Rows.Select(row => new CouchDocument { Id = row.Id, Revision = row.Value.Revision, Conflicts = row.Value.Conflicts, IsDeleted = row.Value.IsDeleted, DeletedConflicts = row.Value.DeletedConflicts }))
+            if (cdbResult != null && cdbResult.Rows.Count() >= 0)
             {
-                results.Add(result);
+                results.Response = new CouchServerResponse(true);
+
+                foreach (var result in cdbResult.Rows.Select(row => new CouchDocument { Id = row.Id, Revision = row.Value.Revision, Conflicts = row.Value.Conflicts, IsDeleted = row.Value.IsDeleted, DeletedConflicts = row.Value.DeletedConflicts }))
+                {
+                    results.Add(result);
+                }
+
+                results.TotalRows = cdbResult.TotalRows;
+                results.Offset = cdbResult.Offset;
             }
 
             return results;

@@ -1,6 +1,6 @@
 using CouchNet.Utils;
 
-namespace CouchNet.Impl.ViewQueries
+namespace CouchNet.Base
 {
     public class BaseViewQuery
     {
@@ -13,7 +13,7 @@ namespace CouchNet.Impl.ViewQueries
         public int? GroupLevel { get; set; }
         public bool DisableReduce { get; set; }
         public bool IncludeDocs { get; set; }
-        public bool InclusiveEnd { get; set; }
+        public bool DisableInclusiveEnd { get; set; }
 
         public override string ToString()
         {
@@ -59,9 +59,9 @@ namespace CouchNet.Impl.ViewQueries
                 qs.Add("include_docs", "true");
             }
 
-            if (InclusiveEnd)
+            if (DisableInclusiveEnd)
             {
-                qs.Add("inclusive_end", "true");
+                qs.Add("inclusive_end", "false");
             }
 
             return qs.ToString();

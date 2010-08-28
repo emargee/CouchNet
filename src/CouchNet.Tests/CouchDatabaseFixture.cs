@@ -4,7 +4,6 @@ using System.Net;
 using CouchNet.Enums;
 using CouchNet.HttpTransport;
 using CouchNet.Impl;
-using CouchNet.Impl.ViewQueries;
 using CouchNet.Tests.Model;
 using Moq;
 using NUnit.Framework;
@@ -715,10 +714,10 @@ namespace CouchNet.Tests
 
             var db = new CouchDatabase(_connectionMock.Object, "unittest");
 
-            var query = new StartEndViewQuery
+            var query = new CouchViewQuery()
             {
                 Limit = 10,
-                StartKey = "test1",
+                Key = "test1",
                 EndKey = "test52",
                 SortDescending = true
             };
@@ -763,10 +762,10 @@ namespace CouchNet.Tests
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             _connectionMock.Setup(s => s.Get("unittest/_all_docs?limit=10&descending=true&include_docs=true&startkey=%22test1%22&endkey=%22test52%22")).Returns(_getAllObjResponse.Object);
 
-            var query = new StartEndViewQuery
+            var query = new CouchViewQuery()
                             {
                                 Limit = 10,
-                                StartKey = "test1",
+                                Key = "test1",
                                 EndKey = "test52",
                                 SortDescending = true
                             };

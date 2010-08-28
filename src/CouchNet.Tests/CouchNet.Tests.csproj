@@ -72,6 +72,8 @@
   <ItemGroup>
     <Compile Include="CouchConnectionFixture.cs" />
     <Compile Include="CouchDatabaseFixture.cs" />
+    <Compile Include="CouchDatabaseViewFixture.cs" />
+    <Compile Include="CouchViewQueryFixture.cs" />
     <Compile Include="Model\ExampleEntity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using CouchNet.Impl;
-using CouchNet.Impl.ViewQueries;
 using CouchNet.Tests.Integration.Model;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -68,7 +67,7 @@ namespace CouchNet.Tests.Integration
             var db = new CouchDatabase(conn, "unittest");
 
             var view = new CouchView("example", "test");
-            var query = new SingleKeyViewQuery { Key = "e99b84cd49824eaf90b5f5c164b39e12" };
+            var query = new CouchViewQuery { Key = "e99b84cd49824eaf90b5f5c164b39e12" };
 
             var results = db.ExecuteView<BusinessCard>(view, query);
 

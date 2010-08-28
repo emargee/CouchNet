@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net;
 using CouchNet.HttpTransport;
 using CouchNet.Impl.QueryResults;
@@ -28,13 +29,18 @@ namespace CouchNet.Impl.ResultParsers
 
             var cdbResult = JsonConvert.DeserializeObject<CouchViewResults<CouchViewResultsRow<T>>>(rawResponse.Data, _settings);
 
-            foreach (var row in cdbResult.Rows)
+            if(cdbResult != null && cdbResult.Rows.Count() >= 0)
             {
-                results.Add(row.Value);
-            }
+                results.Response = new CouchServerResponse(true);
 
-            results.TotalRows = cdbResult.TotalRows;
-            results.Offset = cdbResult.Offset;
+                foreach (var row in cdbResult.Rows)
+                {
+                    results.Add(row.Value);
+                }
+
+                results.TotalRows = cdbResult.TotalRows;
+                results.Offset = cdbResult.Offset;
+            }
 
             return results;
         }

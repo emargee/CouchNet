@@ -71,6 +71,7 @@
     <Compile Include="CouchDatabaseFixture.cs" />
     <Compile Include="Model\BusinessCard.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ViewFixture.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CouchNetHttpTransport\CouchNetHttpTransport.csproj">

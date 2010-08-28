@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Linq;
+using CouchNet.Base;
 using CouchNet.Enums;
 using CouchNet.HttpTransport;
 using CouchNet.Impl.ResultParsers;
 using CouchNet.Impl.ServerResponse;
-using CouchNet.Impl.ViewQueries;
 using CouchNet.Internal;
 using CouchNet.Utils;
 using Newtonsoft.Json;
@@ -133,14 +133,26 @@ namespace CouchNet.Impl
 
         public ICouchQueryResults<T> GetMany<T>(IEnumerable<string> ids) where T : ICouchDocument
         {
-            var query = new MultiKeyViewQuery { Keys = ids };
-            return GetMany<T>(query);
+            var query = new BaseViewQuery();
+            query.IncludeDocs = true;
+
+            var path = string.Format("{0}/_all_docs{1}", Name, query);
+
+            RawResponse = _connection.Post(path, JsonConvert.SerializeObject(new {keys = ids}));
+
+            var results = new CouchAllDocumentsResultsParser<T>().Parse(RawResponse);
+
+            return results;
         }
 
         public ICouchQueryResults<CouchDocument> GetMany(IEnumerable<string> ids)
         {
-            var query = new MultiKeyViewQuery { Keys = ids };
-            return GetMany(query);
+            var path = string.Format("{0}/_all_docs", Name);
+            RawResponse = _connection.Post(path, JsonConvert.SerializeObject(new { keys = ids }));
+
+            var results = new CouchGeneralResultsParser().Parse(RawResponse);
+
+            return results;
         }
 
         public ICouchQueryResults<CouchDocument> GetAll()
@@ -427,28 +439,6 @@ namespace CouchNet.Impl
             }
 
             return JsonConvert.DeserializeObject<T>(RawResponse.Data);
-        }
-
-        private ICouchQueryResults<T> GetMany<T>(MultiKeyViewQuery query) where T : ICouchDocument
-        {
-            query.IncludeDocs = true;
-            var path = string.Format("{0}/_all_docs{1}", Name, query);
-
-            RawResponse = _connection.Post(path, query.SerializeKeys());
-
-            var results = new CouchAllDocumentsResultsParser<T>().Parse(RawResponse);
-
-            return results;
-        }
-
-        public ICouchQueryResults<CouchDocument> GetMany(MultiKeyViewQuery query)
-        {
-            var path = string.Format("{0}/_all_docs", Name);
-            RawResponse = _connection.Post(path, query.SerializeKeys());
-
-            var results = new CouchGeneralResultsParser().Parse(RawResponse);
-
-            return results;
         }
 
         private int GetRevisionsLimit()

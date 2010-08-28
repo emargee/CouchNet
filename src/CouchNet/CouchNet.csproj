@@ -82,9 +82,7 @@
     <Compile Include="Impl\ResultParsers\CouchAllDocumentsResultsParser.cs" />
     <Compile Include="Impl\ResultParsers\CouchBulkOperationResultsParser.cs" />
     <Compile Include="Impl\ResultParsers\CouchGeneralResultsParser.cs" />
-    <Compile Include="Impl\ViewQueries\BaseViewQuery.cs" />
-    <Compile Include="Impl\ViewQueries\MultiKeyViewQuery.cs" />
-    <Compile Include="Impl\ViewQueries\StartEndViewQuery.cs" />
+    <Compile Include="Base\BaseViewQuery.cs" />
     <Compile Include="Internal\CouchAllDocsResultRow.cs" />
     <Compile Include="Internal\CouchDocumentCollection.cs" />
     <Compile Include="Impl\ResultParsers\CouchViewResultsParser.cs" />
@@ -99,7 +97,7 @@
     <Compile Include="Internal\CouchDocumentSummary.cs" />
     <Compile Include="CouchServer.cs" />
     <Compile Include="Impl\CouchView.cs" />
-    <Compile Include="Impl\ViewQueries\SingleKeyViewQuery.cs" />
+    <Compile Include="CouchViewQuery.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\QueryString.cs" />
     <Compile Include="Utils\StringEnum.cs" />

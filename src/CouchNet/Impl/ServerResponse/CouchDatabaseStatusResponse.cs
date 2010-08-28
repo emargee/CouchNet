@@ -22,6 +22,8 @@ namespace CouchNet.Impl.ServerResponse
         public string InstanceStartTime { get; set; }
         public int DiskFormatVersion { get; set; }
 
+        private readonly JsonSerializerSettings _settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+
         public CouchDatabaseStatusResponse() { }
 
         internal CouchDatabaseStatusResponse(CouchRawServerResponse response)
@@ -33,21 +35,7 @@ namespace CouchNet.Impl.ServerResponse
 
         internal CouchDatabaseStatusResponse(IHttpResponse response)
         {
-            var status = JsonConvert.DeserializeObject<CouchDatabaseStatus>(response.Data);
-            IsOk = true;
-            DatabaseName = status.DatabaseName;
-            DocumentCount = status.DocumentCount;
-            DocumentDeletedCount = status.DocumentDeletedCount;
-            UpdateSequence = status.UpdateSequence;
-            PurgeSequence = status.PurgeSequence;
-            IsCompactRunning = status.IsCompactRunning;
-            DiskSize = status.DiskSize;
-            InstanceStartTime = status.InstanceStartTime;
-            DiskFormatVersion = status.DiskFormatVersion;
-        }
-
-        internal CouchDatabaseStatusResponse(CouchDatabaseStatus status)
-        {
+            var status = JsonConvert.DeserializeObject<CouchDatabaseStatus>(response.Data, _settings);
             IsOk = true;
             DatabaseName = status.DatabaseName;
             DocumentCount = status.DocumentCount;
