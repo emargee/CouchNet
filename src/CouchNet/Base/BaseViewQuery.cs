@@ -4,16 +4,16 @@ namespace CouchNet.Base
 {
     public class BaseViewQuery
     {
-        public int? Limit { get; set; }
-        public int? Skip { get; set; }
+        internal int? Limit { get; set; }
+        internal int? Skip { get; set; }
 
-        public bool UseStale { get; set; }
-        public bool SortDescending { get; set; }
-        public bool Group { get; set; }
-        public int? GroupLevel { get; set; }
-        public bool DisableReduce { get; set; }
-        public bool IncludeDocs { get; set; }
-        public bool DisableInclusiveEnd { get; set; }
+        internal bool UseStale { get; set; }
+        internal bool SortDescending { get; set; }
+        internal bool Group { get; set; }
+        internal int? GroupLevel { get; set; }
+        internal bool DisableReduce { get; set; }
+        internal bool IncludeDocs { get; set; }
+        internal bool DisableInclusiveEnd { get; set; }
 
         public override string ToString()
         {

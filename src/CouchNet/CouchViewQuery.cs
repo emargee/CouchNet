@@ -7,10 +7,23 @@ namespace CouchNet
 {
     public class CouchViewQuery : BaseViewQuery
     {
-        public object Key { get; set; }
-        public object EndKey { get; set; }
-        public object StartDocId { get; set; }
-        public object EndDocId { get; set; }
+        internal object Key { get; set; }
+        internal object EndKey { get; set; }
+        internal object StartDocId { get; set; }
+        internal object EndDocId { get; set; }
+
+        public CouchViewQuery() { }
+
+        public CouchViewQuery(object key)
+        {
+            Key = key;
+        }
+
+        public CouchViewQuery(object key, object endKey)
+        {
+            Key = key;
+            EndKey = endKey;
+        }
 
         public override string ToString()
         {
@@ -18,7 +31,7 @@ namespace CouchNet
 
             if (Key != null && EndKey != null)
             {
-                if(Key.GetType() != EndKey.GetType())
+                if (Key.GetType() != EndKey.GetType())
                 {
                     throw new ArgumentException("Key types do not match !");
                 }
@@ -34,9 +47,9 @@ namespace CouchNet
             if (StartDocId != null)
             {
                 qs.Add("startkey_docid", JsonConvert.SerializeObject(StartDocId));
-                
+
             }
-            
+
             if (EndDocId != null)
             {
                 qs.Add("endkey_docid", JsonConvert.SerializeObject(EndDocId));
@@ -45,7 +58,7 @@ namespace CouchNet
             return qs.ToString();
         }
 
-        private string ProcessWildcard(object end)
+        private static string ProcessWildcard(object end)
         {
             if (end.GetType().IsArray)
             {

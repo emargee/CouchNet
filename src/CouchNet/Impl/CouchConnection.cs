@@ -1,10 +1,9 @@
 using System;
 using System.Net;
-using System.Text;
-using System.Web.UI.WebControls;
 
 using CouchNet.HttpTransport;
 using CouchNet.HttpTransport.Impl;
+using CouchNet.Impl.Caching;
 
 namespace CouchNet.Impl
 {
@@ -17,6 +16,14 @@ namespace CouchNet.Impl
         internal Uri BaseAddress { get; set; }
 
         internal string RequestEncoding { get; set; }
+
+        internal bool CacheEnabled { get; set; }
+
+        #endregion
+
+        #region Public Properties
+
+        public ICouchCache Cache { get; set; }
 
         #endregion
 
@@ -41,6 +48,8 @@ namespace CouchNet.Impl
             BaseAddress = uri;
             RequestEncoding = encoding;
             Transport = factory.Create(BaseAddress);
+            Cache = new NullCache();
+            EnableCache();
         }
 
         #endregion
@@ -49,12 +58,32 @@ namespace CouchNet.Impl
 
         public IHttpResponse Get(string path)
         {
-            return Transport.Send(path, HttpVerb.Get, null, RequestEncoding);
+            return Get(path, RequestEncoding);
         }
 
         public IHttpResponse Get(string path, string encoding)
         {
-            return Transport.Send(path, HttpVerb.Get, null, encoding);
+            var cached = Cache[path];
+            
+            if (cached != null && CacheEnabled)
+            {
+                Transport.CacheMatch(cached.ETag);
+            }
+
+            var response = Transport.Send(path, HttpVerb.Get, null, encoding);
+
+            if (response.StatusCode == HttpStatusCode.NotModified && cached != null)
+            {
+                response.Data = cached.Data;
+                return response;
+            }
+
+            if(response.ETag != null && CacheEnabled)
+            {
+                Cache.Add(new CouchCacheEntry(path, response.ETag, response.Data));
+            }
+
+            return response;
         }
 
         public IHttpResponse Put(string path, string data)
@@ -123,7 +152,14 @@ namespace CouchNet.Impl
 
         public void DisableCache()
         {
+            CacheEnabled = false;
+            Transport.NoCache();
             SetHeader("Cache-Control", "no-cache");
+        }
+
+        public void EnableCache()
+        {
+            CacheEnabled = true;
         }
 
         #endregion

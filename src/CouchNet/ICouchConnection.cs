@@ -4,6 +4,8 @@ namespace CouchNet
 {
     public interface ICouchConnection
     {
+        ICouchCache Cache { get; set; }
+
         IHttpResponse Get(string path);
         IHttpResponse Get(string path, string encoding);
         IHttpResponse Put(string path, string data);

@@ -17,10 +17,7 @@ namespace CouchNet.Tests.Integration
             var db = new CouchDatabase(conn, "integrationtest");
             var view = new CouchView("example", "stringtest");
 
-            var query = new CouchViewQuery
-                            {
-                                Key = "apple"
-                            };
+            var query = new CouchViewQuery().Key("apple");
 
             var results = db.ExecuteView<TestEntity>(view, query);
 
@@ -56,11 +53,7 @@ namespace CouchNet.Tests.Integration
             var db = new CouchDatabase(conn, "integrationtest");
             var view = new CouchView("example", "stringtest");
 
-            var query = new CouchViewQuery
-            {
-                Key = "apple",
-                Limit = 0
-            };
+            var query = new CouchViewQuery().Key("apple").Limit(0);
 
             var results = db.ExecuteView<TestEntity>(view, query);
 
@@ -97,10 +90,7 @@ namespace CouchNet.Tests.Integration
             var db = new CouchDatabase(conn, "integrationtest");
             var view = new CouchView("example", "arraytest");
 
-            var query = new CouchViewQuery
-            {
-                Key = new[] { "apple", "orange" }
-            };
+            var query = new CouchViewQuery().Key(new[] {"apple", "orange"});
 
             Debug.WriteLine("View : " + view.ToString());
             Debug.WriteLine("Query : " + query.ToString());
@@ -139,11 +129,7 @@ namespace CouchNet.Tests.Integration
             var db = new CouchDatabase(conn, "integrationtest");
             var view = new CouchView("example", "arraytest");
 
-            var query = new CouchViewQuery
-            {
-                Key = new[] { "apple", "orange" },
-                Limit = 0
-            };
+            var query = new CouchViewQuery().Key(new[] {"apple", "orange"}).Limit(0);
 
             var results = db.ExecuteView<TestEntity>(view, query);
 
@@ -180,11 +166,7 @@ namespace CouchNet.Tests.Integration
             var db = new CouchDatabase(conn, "integrationtest");
             var view = new CouchView("example", "arraytest");
 
-            var query = new CouchViewQuery
-            {
-                Key = new[] { "apple", "cats" },
-                EndKey = new[] {"apple","*"}
-            };
+            var query = new CouchViewQuery().Key(new[] {"apple", "cats"}).EndKey(new[] {"apple", "*"});
 
             Debug.WriteLine("View : " + view.ToString());
             Debug.WriteLine("Query : " + query.ToString());

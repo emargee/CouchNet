@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Net;
+using System.Net.Cache;
 using System.Text;
 using Microsoft.Http;
 using Microsoft.Http.Headers;
@@ -51,6 +52,28 @@ namespace CouchNet.HttpTransport.Impl
             {
                 Client.DefaultHeaders.Add(key, value);
             }
+        }
+
+        public void CacheMatch(string value)
+        {
+            var headValues = new HeaderValues<EntityTag>();
+            headValues.AddString("\"" + value + "\"");
+            Client.DefaultHeaders.IfNoneMatch = headValues;
+
+            if (Client.DefaultHeaders.CacheControl == null)
+            {
+                var cc = new CacheControl();
+                cc.MaxAge = new TimeSpan(0);
+
+                Client.DefaultHeaders.CacheControl = cc;
+            }
+
+        }
+
+        public void NoCache()
+        {
+            Client.DefaultHeaders.CacheControl = null;
+            Client.DefaultHeaders.IfNoneMatch = null;
         }
 
         public void SetCredentials(string username, string password)

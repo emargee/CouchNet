@@ -68,6 +68,7 @@
     <Compile Include="Enums\CouchDocumentRevisionStatus.cs" />
     <Compile Include="Enums\CouchViewMode.cs" />
     <Compile Include="Extensions\Extensions.cs" />
+    <Compile Include="ICouchCache.cs" />
     <Compile Include="ICouchConnection.cs" />
     <Compile Include="ICouchDatabase.cs" />
     <Compile Include="ICouchDocument.cs" />
@@ -75,6 +76,9 @@
     <Compile Include="ICouchServerResponse.cs" />
     <Compile Include="ICouchView.cs" />
     <Compile Include="ICouchQueryResults.cs" />
+    <Compile Include="CouchCacheEntry.cs" />
+    <Compile Include="Impl\Caching\HttpRuntimeCache.cs" />
+    <Compile Include="Impl\Caching\NullCache.cs" />
     <Compile Include="Impl\CouchConnection.cs" />
     <Compile Include="Impl\CouchDatabase.cs" />
     <Compile Include="Impl\ServerResponse\CouchDatabaseStatusResponse.cs" />

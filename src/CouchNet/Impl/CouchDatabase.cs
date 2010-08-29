@@ -138,7 +138,7 @@ namespace CouchNet.Impl
 
             var path = string.Format("{0}/_all_docs{1}", Name, query);
 
-            RawResponse = _connection.Post(path, JsonConvert.SerializeObject(new {keys = ids}));
+            RawResponse = _connection.Post(path, JsonConvert.SerializeObject(new { keys = ids }));
 
             var results = new CouchAllDocumentsResultsParser<T>().Parse(RawResponse);
 
@@ -408,7 +408,7 @@ namespace CouchNet.Impl
                 document.Id = Guid.NewGuid().ToString().ToLower().Replace("{", string.Empty).Replace("}", string.Empty).Replace("-", string.Empty);
             }
 
-            string jsonString;
+            string jsonString = string.Empty;
 
             try
             {

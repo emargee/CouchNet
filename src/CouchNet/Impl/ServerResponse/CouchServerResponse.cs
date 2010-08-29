@@ -1,3 +1,4 @@
+using System;
 using CouchNet.HttpTransport;
 using Newtonsoft.Json;
 
@@ -20,13 +21,26 @@ namespace CouchNet.Impl.ServerResponse
 
         internal CouchServerResponse(IHttpResponse response)
         {
-            var resp = JsonConvert.DeserializeObject<CouchRawServerResponse>(response.Data, _settings);
+            try
+            {
+                var resp = JsonConvert.DeserializeObject<CouchRawServerResponse>(response.Data, _settings);
 
-            Id = resp.Id;
-            Revision = resp.Revision;
-            IsOk = resp.IsOk;
-            ErrorType = resp.Error;
-            ErrorMessage = resp.Reason;
+                Id = resp.Id;
+                Revision = resp.Revision;
+                IsOk = resp.IsOk;
+                ErrorType = resp.Error;
+                ErrorMessage = resp.Reason;
+            }
+
+            catch(Exception ex)
+            {
+                if (ex is JsonReaderException)
+                {
+                    IsOk = false;
+                    ErrorType = "CouchNet Deserialization Error";
+                    ErrorMessage = "Failed to deserialize server response (" + response.Data + ") Extra Info : " + ex.Message;
+                }
+            }
         }
 
         internal CouchServerResponse(CouchRawServerResponse response)

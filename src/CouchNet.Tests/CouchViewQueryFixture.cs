@@ -18,6 +18,7 @@ namespace CouchNet.Tests
         public void BaseQuery_AllSettings_CanSerialize()
         {
             var bq = new BaseViewQuery();
+            bq.DisableInclusiveEnd = true;
             bq.DisableReduce = true;
             bq.Group = true;
             bq.GroupLevel = 1;
@@ -27,7 +28,7 @@ namespace CouchNet.Tests
             bq.SortDescending = true;
             bq.UseStale = true;
 
-            Assert.AreEqual("?limit=10&skip=10&stale=ok&descending=true&group=true&group_level=1&reduce=false&include_docs=true", bq.ToString());
+            Assert.AreEqual("?limit=10&skip=10&stale=ok&descending=true&group=true&group_level=1&reduce=false&include_docs=true&inclusive_end=false", bq.ToString());
         }
 
         [Test]
@@ -99,6 +100,14 @@ namespace CouchNet.Tests
             seq.EndKey = "apple";
 
             Assert.Throws(typeof (ArgumentException), () => seq.ToString());
+        }
+
+        [Test]
+        public void ViewQueryDsl_BasicStringTest_CanSerialize()
+        {
+            var seq = new CouchViewQuery();
+            seq.Key("apple").EndKey("apple*").Limit(2).DisableReduce().DisableInclusiveEnd();
+            Assert.AreEqual("?limit=2&reduce=false&inclusive_end=false&startkey=%22apple%22&endkey=%22apple%5cu9999%22", seq.ToString());
         }
     }
 }

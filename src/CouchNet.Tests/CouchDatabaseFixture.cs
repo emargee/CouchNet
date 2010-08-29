@@ -45,6 +45,7 @@ namespace CouchNet.Tests
         private Mock<IHttpResponse> _bulkSaveErrorResponse;
         private Mock<IHttpResponse> _bulkAddErrorResponse;
         private Mock<IHttpResponse> _saveDocumentResponse;
+        private Mock<IHttpResponse> _saveDocumentMangledResponse;
         private Mock<IHttpResponse> _getManyErrorResponse;
         private Mock<IHttpResponse> _copyResponse;
         private Mock<IHttpResponse> _copyErrorResponse;
@@ -180,6 +181,10 @@ namespace CouchNet.Tests
             _saveDocumentResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _saveDocumentResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.Created);
             _saveDocumentResponse.Setup(s => s.Data).Returns("{\"ok\":true, \"id\":\"4847d6617eda4b7f97c38feff9bf66f1\", \"rev\":\"2-2774761002\"}");
+
+            _saveDocumentMangledResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
+            _saveDocumentMangledResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.Created);
+            _saveDocumentMangledResponse.Setup(s => s.Data).Returns("{\"ok\"\":true\"id\":\"4847d6617eda4b7f97c38feff9bf66f}1\", \"rev\":\"2-277{4761002\"");
 
             _getManyErrorResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _getManyErrorResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.NotFound);
@@ -608,6 +613,27 @@ namespace CouchNet.Tests
             Assert.IsNotNull(resp);
             Assert.IsTrue(resp.IsOk);
             Assert.AreNotEqual("1-946B7D1C", resp.Revision);
+        }
+
+        [Test]
+        public void Save_MangledJsonReturned_HandlesError()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(x => x.Put("unittest/4847d6617eda4b7f97c38feff9bf66f1", "{\"name\":\"jim\",\"age\":0,\"isAlive\":false,\"_id\":\"4847d6617eda4b7f97c38feff9bf66f1\",\"_rev\":\"1-946B7D1C\"}")).Returns(_saveDocumentMangledResponse.Object);
+
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+            var resp = db.Save(new ExampleEntity { Id = "4847d6617eda4b7f97c38feff9bf66f1", Name = "jim", Revision = "1-946B7D1C" });
+            Assert.IsFalse(resp.IsOk);
+            Assert.AreEqual("CouchNet Deserialization Error",resp.ErrorType);
+        }
+
+        [Test]
+        public void Save_BadJsonSent_Throws()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+            Assert.Throws<InvalidCastException>(() => db.Save(new BadJsonPropertyClass { Id = "4847d6617eda4b7f97c38feff9bf66f1", Revision = "1-946B7D1C" }));       
         }
 
         [Test]

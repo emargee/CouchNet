@@ -70,10 +70,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CouchCacheFixture.cs" />
     <Compile Include="CouchConnectionFixture.cs" />
     <Compile Include="CouchDatabaseFixture.cs" />
     <Compile Include="CouchDatabaseViewFixture.cs" />
     <Compile Include="CouchViewQueryFixture.cs" />
+    <Compile Include="Model\BadJsonPropertyClass.cs" />
     <Compile Include="Model\ExampleEntity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
