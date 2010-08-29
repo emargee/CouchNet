@@ -9,6 +9,8 @@ namespace CouchNet.Enums
         [EnumString("_show")]
         Show,
         [EnumString("_list")]
-        List
+        List,
+        [EnumString("_temp_view")]
+        Temp
     }
 }

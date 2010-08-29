@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
+using CouchNet.Base;
 using CouchNet.Impl;
+using CouchNet.Tests.Integration.Model;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System.Collections.Generic;
@@ -90,7 +92,7 @@ namespace CouchNet.Tests.Integration
             var db = new CouchDatabase(conn, "integrationtest");
             var view = new CouchView("example", "arraytest");
 
-            var query = new CouchViewQuery().Key(new[] {"apple", "orange"});
+            var query = new CouchViewQuery().Key(new[] { "apple", "orange" });
 
             Debug.WriteLine("View : " + view.ToString());
             Debug.WriteLine("Query : " + query.ToString());
@@ -129,7 +131,7 @@ namespace CouchNet.Tests.Integration
             var db = new CouchDatabase(conn, "integrationtest");
             var view = new CouchView("example", "arraytest");
 
-            var query = new CouchViewQuery().Key(new[] {"apple", "orange"}).Limit(0);
+            var query = new CouchViewQuery().Key(new[] { "apple", "orange" }).Limit(0);
 
             var results = db.ExecuteView<TestEntity>(view, query);
 
@@ -166,7 +168,7 @@ namespace CouchNet.Tests.Integration
             var db = new CouchDatabase(conn, "integrationtest");
             var view = new CouchView("example", "arraytest");
 
-            var query = new CouchViewQuery().Key(new[] {"apple", "cats"}).EndKey(new[] {"apple", "*"});
+            var query = new CouchViewQuery().Key(new[] { "apple", "cats" }).EndKey(new[] { "apple", "*" });
 
             Debug.WriteLine("View : " + view.ToString());
             Debug.WriteLine("Query : " + query.ToString());
@@ -196,6 +198,58 @@ namespace CouchNet.Tests.Integration
 
             Assert.IsTrue(results.IsOk);
             Assert.Greater(results.Count, 0);
+        }
+
+        [Test]
+        public void TempView_CanSerialize()
+        {
+            var conn = new CouchConnection("http://localhost:5984/");
+            var db = new CouchDatabase(conn, "unittest");
+            var temp = new CouchTempView { Map = "function(doc) {\n  emit(null, doc);\n}" };
+            var results = db.ExecuteView<BusinessCard>(temp, new BaseViewQuery());
+
+            if (results.IsOk)
+            {
+                if (results.HasResults)
+                {
+                    foreach (var result in results)
+                    {
+                        Debug.WriteLine(result.Name);
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine("Nothing found :(");
+                }
+            }
+            else
+            {
+                Debug.WriteLine("Error: " + results.Response.ErrorType + " / " + results.Response.ErrorMessage);
+            }
+        }
+
+        [Test]
+        public void DesignDoc()
+        {
+            //What purpose does a DesignDocument object serve ?
+            //1>Info function
+            //2>list of views
+
+            //var db = new CouchDatabase(_conn, "unitest");
+
+            //var newView = new CouchView("example", "monkeyview");
+            //newView.Map = "blah";
+            //newView.Reduce = "blah";
+            //newView.Langauge = "badgers";
+
+            //db.SaveChanges(newView);
+
+            //ICouchDesignDocument doc = db.GetDesignDocument("example");
+            //var view = doc.View["monkeyview"];
+            //var info = doc.Info();
+            //doc.SaveChanges();
+
+            //db.ExecuteView<BusinessCard>(newView, new BaseViewQuery());
         }
     }
 

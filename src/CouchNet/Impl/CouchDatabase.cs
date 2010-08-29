@@ -40,6 +40,8 @@ namespace CouchNet.Impl
 
         public readonly string Name;
 
+        #region Public Properties
+
         public CouchBulkUpdateBehaviour BulkUpdateBehaviour { get; set; }
 
         public int RevisionsLimit
@@ -54,6 +56,8 @@ namespace CouchNet.Impl
                 SetRevisionsLimit(value);
             }
         }
+
+        #endregion
 
         #region ctor
 
@@ -334,13 +338,25 @@ namespace CouchNet.Impl
 
         public ICouchQueryResults<T> ExecuteView<T>(ICouchView view, BaseViewQuery query) where T : ICouchDocument
         {
-            var path = string.Format("{0}/{1}{2}", Name, view, query);
+            var path = string.Format("{0}/{1}{2}", Name, view.FullPath, query);
 
-            RawResponse = _connection.Get(path);
+            if(view.Mode == CouchViewMode.Temp)
+            {
+                RawResponse = _connection.Post(path, view.ToString(), "application/json");
+            }
+            else
+            {
+                RawResponse = _connection.Get(path);    
+            }
 
             var results = new CouchViewResultsParser<T>().Parse(RawResponse);
 
             return results;
+        }
+
+        public ICouchServerResponse SaveViewChanges(ICouchView view)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

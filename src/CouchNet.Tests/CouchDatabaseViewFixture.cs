@@ -1,4 +1,5 @@
 using System.Net;
+using CouchNet.Base;
 using CouchNet.HttpTransport;
 using CouchNet.Impl;
 using CouchNet.Tests.Model;
@@ -34,7 +35,25 @@ namespace CouchNet.Tests
             var results = db.ExecuteView<ExampleEntity>(view, query);
             Assert.IsTrue(results.IsOk);
             Assert.IsFalse(results.HasResults);
-            Assert.AreEqual(0,results.Count);
+            Assert.AreEqual(0, results.Count);
+        }
+
+        [Test]
+        public void ExecuteView_TempView_CanSerialize()
+        {
+            var temp = new CouchTempView
+                        {
+                            Map = "function(doc) { if (doc.foo=='bar') { emit(null, doc.foo); } }",
+                            Reduce = "function (key, values, rereduce) { return sum(values); }"
+                        };
+
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(x => x.Post("unittest/_temp_view", "{\"language\":\"javascript\",\"map\":\"function(doc) { if (doc.foo=='bar') { emit(null, doc.foo); } }\",\"reduce\":\"function (key, values, rereduce) { return sum(values); }\"}", "application/json")).Returns(_viewEmptyResults.Object);
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+            var resp = db.ExecuteView<CouchDocument>(temp, new BaseViewQuery());
+            Assert.IsTrue(resp.IsOk);
+            Assert.IsFalse(resp.HasResults);
+            Assert.AreEqual(0, resp.Count);
         }
     }
 }

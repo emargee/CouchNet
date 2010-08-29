@@ -7,8 +7,6 @@ namespace CouchNet
 {
     public interface ICouchDatabase
     {   
-        CouchDatabaseStatusResponse Status();
-
         T Get<T>(string id) where T : ICouchDocument;
         T Get<T>(string id, string revision) where T : ICouchDocument;
         T Get<T>(string id, CouchDocumentOptions options) where T : ICouchDocument;
@@ -30,5 +28,6 @@ namespace CouchNet
         ICouchServerResponse Copy(string fromId, string toId, string revision);
 
         ICouchQueryResults<T> ExecuteView<T>(ICouchView view, BaseViewQuery query) where T : ICouchDocument;
+        ICouchServerResponse SaveViewChanges(ICouchView view);
     }
 }

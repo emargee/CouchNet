@@ -1,4 +1,6 @@
 using System;
+using CouchNet.Impl;
+using CouchNet.Impl.ServerResponse;
 
 namespace CouchNet
 {
@@ -16,6 +18,15 @@ namespace CouchNet
             }
 
             _connection = connection;
+        }
+
+        #endregion
+
+        #region Database Control
+
+        public CouchDatabaseStatusResponse DatabaseStatus(string databaseName)
+        {
+            return new CouchDatabase(_connection, databaseName).Status();
         }
 
         #endregion
