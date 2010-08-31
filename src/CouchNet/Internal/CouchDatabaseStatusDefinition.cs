@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 namespace CouchNet
 {
     [JsonObject]
-    internal class CouchDatabaseStatus
+    internal class CouchDatabaseStatusDefinition
     {
         [JsonProperty(PropertyName = "db_name")]
         public string DatabaseName { get; set; }

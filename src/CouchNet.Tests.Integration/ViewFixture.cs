@@ -1,11 +1,8 @@
-using System;
 using System.Diagnostics;
-using CouchNet.Base;
+
 using CouchNet.Impl;
 using CouchNet.Tests.Integration.Model;
-using Newtonsoft.Json;
 using NUnit.Framework;
-using System.Collections.Generic;
 
 namespace CouchNet.Tests.Integration
 {
@@ -17,7 +14,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
             var db = new CouchDatabase(conn, "integrationtest");
-            var view = new CouchView("example", "stringtest");
+            var view = db.GetView("example", "stringtest");
 
             var query = new CouchViewQuery().Key("apple");
 
@@ -53,7 +50,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
             var db = new CouchDatabase(conn, "integrationtest");
-            var view = new CouchView("example", "stringtest");
+            var view = db.GetView("example", "stringtest");
 
             var query = new CouchViewQuery().Key("apple").Limit(0);
 
@@ -90,7 +87,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
             var db = new CouchDatabase(conn, "integrationtest");
-            var view = new CouchView("example", "arraytest");
+            var view = db.GetView("example", "arraytest");
 
             var query = new CouchViewQuery().Key(new[] { "apple", "orange" });
 
@@ -129,7 +126,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
             var db = new CouchDatabase(conn, "integrationtest");
-            var view = new CouchView("example", "arraytest");
+            var view = db.GetView("example", "arraytest");
 
             var query = new CouchViewQuery().Key(new[] { "apple", "orange" }).Limit(0);
 
@@ -166,7 +163,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
             var db = new CouchDatabase(conn, "integrationtest");
-            var view = new CouchView("example", "arraytest");
+            var view = db.GetView("example", "arraytest");
 
             var query = new CouchViewQuery().Key(new[] { "apple", "cats" }).EndKey(new[] { "apple", "*" });
 
@@ -206,7 +203,7 @@ namespace CouchNet.Tests.Integration
             var conn = new CouchConnection("http://localhost:5984/");
             var db = new CouchDatabase(conn, "unittest");
             var temp = new CouchTempView { Map = "function(doc) {\n  emit(null, doc);\n}" };
-            var results = db.ExecuteView<BusinessCard>(temp, new BaseViewQuery());
+            var results = db.ExecuteView<BusinessCard>(temp, new CouchViewQuery());
 
             if (results.IsOk)
             {
@@ -228,7 +225,6 @@ namespace CouchNet.Tests.Integration
             }
         }
 
-        [Test]
         public void DesignDoc()
         {
             //What purpose does a DesignDocument object serve ?

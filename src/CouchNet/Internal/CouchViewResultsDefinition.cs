@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 namespace CouchNet.Internal
 {
     [JsonObject]
-    internal class CouchViewResults<T>
+    internal class CouchViewResultsDefinition<T>
     {
         [JsonProperty(PropertyName = "total_rows")]
         public int TotalRows { get; set; }

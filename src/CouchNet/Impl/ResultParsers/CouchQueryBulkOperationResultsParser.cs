@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace CouchNet.Impl.ResultParsers
 {
-    public class CouchBulkOperationResultsParser : ICouchResultsParser<ICouchServerResponse>
+    public class CouchQueryBulkOperationResultsParser : ICouchQueryResultsParser<ICouchServerResponse>
     {
         private readonly JsonSerializerSettings _settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
 
@@ -16,7 +16,7 @@ namespace CouchNet.Impl.ResultParsers
         {
             var results = new CouchQueryResults<ICouchServerResponse>();
 
-            var cdbResults = JsonConvert.DeserializeObject<IEnumerable<CouchRawServerResponse>>(rawResponse.Data, _settings);
+            var cdbResults = JsonConvert.DeserializeObject<IEnumerable<CouchServerResponseDefinition>>(rawResponse.Data, _settings);
 
             foreach (var result in cdbResults)
             {

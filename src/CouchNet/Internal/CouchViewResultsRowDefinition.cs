@@ -1,9 +1,9 @@
 using Newtonsoft.Json;
 
-namespace CouchNet.Internal
+namespace CouchNet
 {
     [JsonObject]
-    internal class CouchAllDocsResultRow<T>
+    internal class CouchViewResultsRowDefinition<T> where T : ICouchDocument
     {
         private object _key;
 
@@ -21,9 +21,6 @@ namespace CouchNet.Internal
         }
 
         [JsonProperty(PropertyName = "value")]
-        public CouchDocumentSummary Value { get; set; }
-
-        [JsonProperty(PropertyName = "doc")]
-        public T Document { get; set; }
+        public T Value { get; set; }
     }
 }

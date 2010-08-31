@@ -66,13 +66,14 @@
     <Compile Include="Enums\CouchBulkUpdateBehaviour.cs" />
     <Compile Include="Enums\CouchDocumentOptions.cs" />
     <Compile Include="Enums\CouchDocumentRevisionStatus.cs" />
-    <Compile Include="Enums\CouchViewMode.cs" />
+    <Compile Include="Exceptions\CouchNetDocumentNotFoundException.cs" />
     <Compile Include="Extensions\Extensions.cs" />
     <Compile Include="ICouchCache.cs" />
     <Compile Include="ICouchConnection.cs" />
     <Compile Include="ICouchDatabase.cs" />
     <Compile Include="ICouchDocument.cs" />
-    <Compile Include="ICouchResultsParser.cs" />
+    <Compile Include="ICouchHandler.cs" />
+    <Compile Include="ICouchQueryResultsParser.cs" />
     <Compile Include="ICouchServerResponse.cs" />
     <Compile Include="ICouchView.cs" />
     <Compile Include="ICouchQueryResults.cs" />
@@ -81,28 +82,32 @@
     <Compile Include="Impl\Caching\NullCache.cs" />
     <Compile Include="Impl\CouchConnection.cs" />
     <Compile Include="Impl\CouchDatabase.cs" />
+    <Compile Include="Impl\CouchDesignDocument.cs" />
+    <Compile Include="Impl\CouchListHandler.cs" />
+    <Compile Include="Impl\CouchShowHandler.cs" />
     <Compile Include="Impl\CouchTempView.cs" />
     <Compile Include="Impl\ServerResponse\CouchDatabaseStatusResponse.cs" />
+    <Compile Include="Impl\ServerResponse\CouchHandlerResponse.cs" />
     <Compile Include="Impl\ServerResponse\CouchServerResponse.cs" />
-    <Compile Include="Impl\ResultParsers\CouchAllDocumentsResultsParser.cs" />
-    <Compile Include="Impl\ResultParsers\CouchBulkOperationResultsParser.cs" />
-    <Compile Include="Impl\ResultParsers\CouchGeneralResultsParser.cs" />
-    <Compile Include="Base\BaseViewQuery.cs" />
-    <Compile Include="Internal\CouchAllDocsResultRow.cs" />
-    <Compile Include="Internal\CouchDesignDocument.cs" />
-    <Compile Include="Internal\CouchDocumentCollection.cs" />
-    <Compile Include="Impl\ResultParsers\CouchViewResultsParser.cs" />
-    <Compile Include="Internal\CouchTempViewSubmit.cs" />
+    <Compile Include="Impl\ResultParsers\CouchQueryAllDocumentsResultsParser.cs" />
+    <Compile Include="Impl\ResultParsers\CouchQueryBulkOperationResultsParser.cs" />
+    <Compile Include="Impl\ResultParsers\CouchQueryGeneralResultsParser.cs" />
+    <Compile Include="Internal\CouchAllDocsResultRowDefinition.cs" />
+    <Compile Include="Internal\CouchDesignDocumentDefinition.cs" />
+    <Compile Include="Internal\CouchDocumentCollectionDefinition.cs" />
+    <Compile Include="Impl\ResultParsers\CouchQueryViewResultsParser.cs" />
+    <Compile Include="Internal\CouchRewriteHandlerDefinition.cs" />
+    <Compile Include="Internal\CouchTempViewDefinition.cs" />
     <Compile Include="Internal\CouchViewDefinition.cs" />
-    <Compile Include="Internal\CouchViewResultsRow.cs" />
-    <Compile Include="Internal\CouchDatabaseStatus.cs" />
+    <Compile Include="Internal\CouchViewResultsRowDefinition.cs" />
+    <Compile Include="Internal\CouchDatabaseStatusDefinition.cs" />
     <Compile Include="Impl\CouchDocument.cs" />
     <Compile Include="Impl\CouchDocumentRevisionInfo.cs" />
     <Compile Include="Impl\CouchDocumentRevisions.cs" />
     <Compile Include="Impl\QueryResults\CouchQueryResults.cs" />
-    <Compile Include="Internal\CouchViewResults.cs" />
-    <Compile Include="Internal\CouchRawServerResponse.cs" />
-    <Compile Include="Internal\CouchDocumentSummary.cs" />
+    <Compile Include="Internal\CouchViewResultsDefinition.cs" />
+    <Compile Include="Internal\CouchServerResponseDefinition.cs" />
+    <Compile Include="Internal\CouchDocumentSummaryDefinition.cs" />
     <Compile Include="CouchServer.cs" />
     <Compile Include="Impl\CouchView.cs" />
     <Compile Include="CouchViewQuery.cs" />
@@ -127,9 +132,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Exceptions\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\CouchNetHttpTransport\CouchNetHttpTransport.csproj">
       <Project>{3A3A22EA-9192-4792-80D9-83C41F3462C6}</Project>

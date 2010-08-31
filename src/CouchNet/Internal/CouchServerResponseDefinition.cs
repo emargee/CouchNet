@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 namespace CouchNet
 {
     [JsonObject]
-    internal class CouchRawServerResponse
+    internal class CouchServerResponseDefinition
     {
         [JsonProperty(PropertyName = "ok")]
         public bool IsOk { get; set; }

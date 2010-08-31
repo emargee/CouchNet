@@ -1,5 +1,4 @@
 using System;
-using CouchNet.Base;
 using NUnit.Framework;
 
 namespace CouchNet.Tests
@@ -8,16 +7,16 @@ namespace CouchNet.Tests
     public class CouchViewQueryFixture
     {
         [Test]
-        public void BaseQuery_NothingSet_CanSerialize()
+        public void CouchViewQuery_NothingSet_CanSerialize()
         {
-            var bq = new BaseViewQuery();
+            var bq = new CouchViewQuery();
             Assert.IsEmpty(bq.ToString());
         }
 
         [Test]
-        public void BaseQuery_AllSettings_CanSerialize()
+        public void CouchViewQuery_AllSettings_CanSerialize()
         {
-            var bq = new BaseViewQuery();
+            var bq = new CouchViewQuery();
             bq.DisableInclusiveEnd = true;
             bq.DisableReduce = true;
             bq.Group = true;

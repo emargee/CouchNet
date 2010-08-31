@@ -9,33 +9,33 @@ using Newtonsoft.Json;
 
 namespace CouchNet.Impl.ResultParsers
 {
-    public class CouchGeneralResultsParser : ICouchResultsParser<CouchDocument>
+    public class CouchQueryViewResultsParser<T> : ICouchQueryResultsParser<T> where T : ICouchDocument
     {
         private readonly JsonSerializerSettings _settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
 
-        public ICouchQueryResults<CouchDocument> Parse(IHttpResponse rawResponse)
+        public ICouchQueryResults<T> Parse(IHttpResponse rawResponse)
         {
-            var results = new CouchQueryResults<CouchDocument>();
+            var results = new CouchQueryResults<T>();
 
             if (rawResponse.StatusCode != HttpStatusCode.OK)
             {
                 if (rawResponse.Data.Contains("\"error\""))
                 {
-                    results.Response = new CouchServerResponse(rawResponse);
+                    results.Response = new CouchServerResponse(JsonConvert.DeserializeObject<CouchServerResponseDefinition>(rawResponse.Data));
                 }
 
                 return results;
             }
 
-            var cdbResult = JsonConvert.DeserializeObject<CouchViewResults<CouchViewResultsRow<CouchDocumentSummary>>>(rawResponse.Data, _settings);
+            var cdbResult = JsonConvert.DeserializeObject<CouchViewResultsDefinition<CouchViewResultsRowDefinition<T>>>(rawResponse.Data, _settings);
 
-            if (cdbResult != null && cdbResult.Rows.Count() >= 0)
+            if(cdbResult != null && cdbResult.Rows.Count() >= 0)
             {
                 results.Response = new CouchServerResponse(true);
 
-                foreach (var result in cdbResult.Rows.Select(row => new CouchDocument { Id = row.Id, Revision = row.Value.Revision, Conflicts = row.Value.Conflicts, IsDeleted = row.Value.IsDeleted, DeletedConflicts = row.Value.DeletedConflicts }))
+                foreach (var row in cdbResult.Rows)
                 {
-                    results.Add(result);
+                    results.Add(row.Value);
                 }
 
                 results.TotalRows = cdbResult.TotalRows;

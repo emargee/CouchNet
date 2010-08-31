@@ -4,16 +4,16 @@ using Newtonsoft.Json;
 namespace CouchNet.Internal
 {
     [JsonObject]
-    internal class CouchDocumentCollection<T> where T : ICouchDocument
+    internal class CouchDocumentCollectionDefinition<T> where T : ICouchDocument
     {
         private readonly List<T> _documents;
 
-        public CouchDocumentCollection()
+        public CouchDocumentCollectionDefinition()
         {
             _documents = new List<T>();
         }
 
-        public CouchDocumentCollection(IEnumerable<T> collection)
+        public CouchDocumentCollectionDefinition(IEnumerable<T> collection)
         {
             _documents = new List<T>(collection);
         }

@@ -1,16 +1,26 @@
 using System;
-using CouchNet.Base;
 using CouchNet.Utils;
 using Newtonsoft.Json;
 
 namespace CouchNet
 {
-    public class CouchViewQuery : BaseViewQuery
+    public class CouchViewQuery
     {
         internal object Key { get; set; }
         internal object EndKey { get; set; }
         internal object StartDocId { get; set; }
         internal object EndDocId { get; set; }
+
+        internal int? Limit { get; set; }
+        internal int? Skip { get; set; }
+
+        internal bool UseStale { get; set; }
+        internal bool SortDescending { get; set; }
+        internal bool Group { get; set; }
+        internal int? GroupLevel { get; set; }
+        internal bool DisableReduce { get; set; }
+        internal bool IncludeDocs { get; set; }
+        internal bool DisableInclusiveEnd { get; set; }
 
         public CouchViewQuery() { }
 
@@ -27,7 +37,52 @@ namespace CouchNet
 
         public override string ToString()
         {
-            var qs = new QueryString(base.ToString());
+            var qs = new QueryString();
+
+            if (Limit.HasValue)
+            {
+                qs.Add("limit", Limit.Value.ToString());
+            }
+
+            if (Skip.HasValue)
+            {
+                qs.Add("skip", Skip.Value.ToString());
+            }
+
+            if (UseStale)
+            {
+                qs.Add("stale", "ok");
+            }
+
+            if (SortDescending)
+            {
+                qs.Add("descending", "true");
+            }
+
+            if (Group)
+            {
+                qs.Add("group", "true");
+            }
+
+            if (GroupLevel.HasValue)
+            {
+                qs.Add("group_level", GroupLevel.Value.ToString());
+            }
+
+            if (DisableReduce)
+            {
+                qs.Add("reduce", "false");
+            }
+
+            if (IncludeDocs)
+            {
+                qs.Add("include_docs", "true");
+            }
+
+            if (DisableInclusiveEnd)
+            {
+                qs.Add("inclusive_end", "false");
+            }
 
             if (Key != null && EndKey != null)
             {

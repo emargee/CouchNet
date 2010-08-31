@@ -26,16 +26,16 @@ namespace CouchNet.Impl.ServerResponse
 
         public CouchDatabaseStatusResponse() { }
 
-        internal CouchDatabaseStatusResponse(CouchRawServerResponse response)
+        internal CouchDatabaseStatusResponse(CouchServerResponseDefinition responseDefinition)
         {
-            IsOk = response.IsOk;
-            ErrorType = response.Error;
-            ErrorMessage = response.Reason;
+            IsOk = responseDefinition.IsOk;
+            ErrorType = responseDefinition.Error;
+            ErrorMessage = responseDefinition.Reason;
         }
 
         internal CouchDatabaseStatusResponse(IHttpResponse response)
         {
-            var status = JsonConvert.DeserializeObject<CouchDatabaseStatus>(response.Data, _settings);
+            var status = JsonConvert.DeserializeObject<CouchDatabaseStatusDefinition>(response.Data, _settings);
             IsOk = true;
             DatabaseName = status.DatabaseName;
             DocumentCount = status.DocumentCount;

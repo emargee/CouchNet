@@ -6,7 +6,8 @@ namespace CouchNet
     {
         string DesignDocument { get; }
         string Name { get; }
-        CouchViewMode Mode { get; }
-        string FullPath { get; }
+        string Map { get; set; }
+        string Reduce { get; set; }
+        string ToString();
     }
 }

@@ -1,7 +1,6 @@
 using System;
-using CouchNet.Enums;
+using System.Collections.Generic;
 using CouchNet.Internal;
-using CouchNet.Utils;
 using Newtonsoft.Json;
 
 namespace CouchNet.Impl
@@ -10,22 +9,25 @@ namespace CouchNet.Impl
     {
         private readonly JsonSerializerSettings _settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, MissingMemberHandling = MissingMemberHandling.Ignore };
 
-        public string DesignDocument { get; private set; }
-        public string Name { get; private set; }
+        public string DesignDocument { get; internal set; }
+        public string Name { get; internal set; }        
+
+        public string Map { get; set; }
+        public string Reduce { get; set; }
+
+        public CouchView() { }
         
-        public string Langauge { get; private set; }
-        public string Map { get; private set; }
-        public string Reduce { get; private set; }
-
-        public CouchViewMode Mode { get; private set; }
-
-        public string FullPath { get { return string.Format("_design/{0}/{1}/{2}", DesignDocument, StringEnum.GetString(Mode), Name); } }
-
-        public CouchView(string designDocument, string viewName)
+        internal CouchView(string designDocument, KeyValuePair<string, CouchViewDefinition> viewDefinition)
         {
             DesignDocument = designDocument;
-            Name = viewName;
-            Mode = CouchViewMode.View;
+            Name = viewDefinition.Key;
+            Map = viewDefinition.Value.Map;
+            Reduce = viewDefinition.Value.Reduce;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("_design/{0}/_view/{1}", DesignDocument, Name);
         }
     }
 }

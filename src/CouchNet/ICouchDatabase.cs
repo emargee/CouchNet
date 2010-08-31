@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using CouchNet.Base;
 using CouchNet.Enums;
-using CouchNet.Impl.ServerResponse;
+using CouchNet.Impl;
 
 namespace CouchNet
 {
@@ -14,7 +13,7 @@ namespace CouchNet
         ICouchQueryResults<T> GetMany<T>(IEnumerable<string> ids) where T : ICouchDocument;
                
         ICouchQueryResults<T> GetAll<T>() where T : ICouchDocument;
-        ICouchQueryResults<T> GetAll<T>(BaseViewQuery query) where T : ICouchDocument;
+        ICouchQueryResults<T> GetAll<T>(CouchViewQuery query) where T : ICouchDocument;
 
         ICouchServerResponse Add(ICouchDocument document);
         ICouchQueryResults<ICouchServerResponse> AddMany(IEnumerable<ICouchDocument> document);
@@ -27,7 +26,6 @@ namespace CouchNet
 
         ICouchServerResponse Copy(string fromId, string toId, string revision);
 
-        ICouchQueryResults<T> ExecuteView<T>(ICouchView view, BaseViewQuery query) where T : ICouchDocument;
-        ICouchServerResponse SaveViewChanges(ICouchView view);
+        ICouchQueryResults<T> ExecuteView<T>(ICouchView view, CouchViewQuery query) where T : ICouchDocument;
     }
 }

@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Net;
 using System.Linq;
-using CouchNet.Base;
+
 using CouchNet.Enums;
+using CouchNet.Exceptions;
 using CouchNet.HttpTransport;
 using CouchNet.Impl.ResultParsers;
 using CouchNet.Impl.ServerResponse;
@@ -35,6 +37,8 @@ namespace CouchNet.Impl
         private readonly JsonSerializerSettings _settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
 
         internal IHttpResponse RawResponse { get; set; }
+
+        internal List<CouchDesignDocument> DesignDocuments;
 
         #endregion
 
@@ -80,6 +84,8 @@ namespace CouchNet.Impl
             Name = databaseName;
 
             BulkUpdateBehaviour = CouchBulkUpdateBehaviour.NonAtomic;
+
+            DesignDocuments = new List<CouchDesignDocument>();
         }
 
         #endregion
@@ -137,14 +143,14 @@ namespace CouchNet.Impl
 
         public ICouchQueryResults<T> GetMany<T>(IEnumerable<string> ids) where T : ICouchDocument
         {
-            var query = new BaseViewQuery();
+            var query = new CouchViewQuery();
             query.IncludeDocs = true;
 
             var path = string.Format("{0}/_all_docs{1}", Name, query);
 
             RawResponse = _connection.Post(path, JsonConvert.SerializeObject(new { keys = ids }));
 
-            var results = new CouchAllDocumentsResultsParser<T>().Parse(RawResponse);
+            var results = new CouchQueryAllDocumentsResultsParser<T>().Parse(RawResponse);
 
             return results;
         }
@@ -154,17 +160,17 @@ namespace CouchNet.Impl
             var path = string.Format("{0}/_all_docs", Name);
             RawResponse = _connection.Post(path, JsonConvert.SerializeObject(new { keys = ids }));
 
-            var results = new CouchGeneralResultsParser().Parse(RawResponse);
+            var results = new CouchQueryGeneralResultsParser().Parse(RawResponse);
 
             return results;
         }
 
         public ICouchQueryResults<CouchDocument> GetAll()
         {
-            return GetAll(new BaseViewQuery());
+            return GetAll(new CouchViewQuery());
         }
 
-        public ICouchQueryResults<CouchDocument> GetAll(BaseViewQuery query)
+        public ICouchQueryResults<CouchDocument> GetAll(CouchViewQuery query)
         {
             var path = string.Format("{0}/_all_docs", Name);
 
@@ -175,17 +181,17 @@ namespace CouchNet.Impl
 
             RawResponse = _connection.Get(path);
 
-            var results = new CouchGeneralResultsParser().Parse(RawResponse);
+            var results = new CouchQueryGeneralResultsParser().Parse(RawResponse);
 
             return results;
         }
 
         public ICouchQueryResults<T> GetAll<T>() where T : ICouchDocument
         {
-            return GetAll<T>(new BaseViewQuery());
+            return GetAll<T>(new CouchViewQuery());
         }
 
-        public ICouchQueryResults<T> GetAll<T>(BaseViewQuery query) where T : ICouchDocument
+        public ICouchQueryResults<T> GetAll<T>(CouchViewQuery query) where T : ICouchDocument
         {
             query.IncludeDocs = true;
 
@@ -193,7 +199,7 @@ namespace CouchNet.Impl
 
             RawResponse = _connection.Get(path);
 
-            var results = new CouchAllDocumentsResultsParser<T>().Parse(RawResponse);
+            var results = new CouchQueryAllDocumentsResultsParser<T>().Parse(RawResponse);
 
             return results;
         }
@@ -211,7 +217,7 @@ namespace CouchNet.Impl
         public ICouchQueryResults<ICouchServerResponse> AddMany(IEnumerable<ICouchDocument> documents)
         {
             var path = string.Format("{0}/_bulk_docs", Name);
-            var bulk = new CouchDocumentCollection<ICouchDocument>(documents);
+            var bulk = new CouchDocumentCollectionDefinition<ICouchDocument>(documents);
 
             if (BulkUpdateBehaviour == CouchBulkUpdateBehaviour.AllOrNothing)
             {
@@ -220,7 +226,7 @@ namespace CouchNet.Impl
 
             RawResponse = _connection.Post(path, JsonConvert.SerializeObject(bulk, Formatting.None, _settings));
 
-            var results = new CouchBulkOperationResultsParser().Parse(RawResponse);
+            var results = new CouchQueryBulkOperationResultsParser().Parse(RawResponse);
 
             return results;
         }
@@ -245,7 +251,7 @@ namespace CouchNet.Impl
             }
 
             var path = string.Format("{0}/_bulk_docs", Name);
-            var bulk = new CouchDocumentCollection<ICouchDocument>(documents);
+            var bulk = new CouchDocumentCollectionDefinition<ICouchDocument>(documents);
 
             if (BulkUpdateBehaviour == CouchBulkUpdateBehaviour.AllOrNothing)
             {
@@ -254,7 +260,7 @@ namespace CouchNet.Impl
 
             RawResponse = _connection.Post(path, JsonConvert.SerializeObject(bulk, Formatting.None, _settings));
 
-            var results = new CouchBulkOperationResultsParser().Parse(RawResponse);
+            var results = new CouchQueryBulkOperationResultsParser().Parse(RawResponse);
 
             return results;
         }
@@ -334,29 +340,106 @@ namespace CouchNet.Impl
 
         #endregion
 
-        #region View Methods
+        #region Design Document / View Methods
 
-        public ICouchQueryResults<T> ExecuteView<T>(ICouchView view, BaseViewQuery query) where T : ICouchDocument
+        public CouchDesignDocument DesignDocument(string name)
         {
-            var path = string.Format("{0}/{1}{2}", Name, view.FullPath, query);
+            //var cached = DesignDocuments.Find(x => x.Name == name);
 
-            if(view.Mode == CouchViewMode.Temp)
+            //if (cached != null)
+            //{
+            //    return cached;
+            //}
+
+            //var doc = FetchDesignDocument(name);
+
+            //DesignDocuments.Add(doc);
+            //return doc;
+
+            return FetchDesignDocument(name);
+        }
+
+        //public CouchDesignDocumentInfo DesignDocumentInfo(CouchDesignDocument document)
+        //{
+            
+        //}
+
+        public CouchView GetView(string designDocument, string name)
+        {
+            return DesignDocument(designDocument).View(name);
+        }
+
+        public ICouchQueryResults<T> ExecuteView<T>(string designDocument, string viewName, CouchViewQuery query) where T : ICouchDocument
+        {
+            return ExecuteView<T>(DesignDocument(designDocument).View(viewName), query);
+        }
+
+        public ICouchQueryResults<T> ExecuteView<T>(ICouchView view, CouchViewQuery query) where T : ICouchDocument
+        {
+            var path = string.Format("{0}/{1}{2}", Name, view, query);
+
+            if(view.GetType() == typeof(CouchTempView))
             {
-                RawResponse = _connection.Post(path, view.ToString(), "application/json");
+                path = string.Format("{0}/{1}{2}", Name, view, query);
+                RawResponse = _connection.Post(path, ((CouchTempView)view).ToJson(), "application/json");
             }
             else
             {
                 RawResponse = _connection.Get(path);    
             }
 
-            var results = new CouchViewResultsParser<T>().Parse(RawResponse);
+            var results = new CouchQueryViewResultsParser<T>().Parse(RawResponse);
 
             return results;
         }
 
-        public ICouchServerResponse SaveViewChanges(ICouchView view)
+        public CouchHandlerResponse ExecuteList(CouchListHandler handler, ICouchView view, CouchViewQuery query)
         {
-            throw new NotImplementedException();
+            var path = string.Format("{0}/{1}/{2}{3}", Name, handler, view.Name, query);
+
+            RawResponse = _connection.Get(path);
+
+            return new CouchHandlerResponse(RawResponse);
+        }
+
+        public CouchHandlerResponse ExecuteShow(CouchShowHandler handler)
+        {
+            return ExecuteShow(handler, null, new NameValueCollection());
+        }
+
+        public CouchHandlerResponse ExecuteShow(CouchShowHandler handler, NameValueCollection queryString)
+        {
+            return ExecuteShow(handler, null, queryString);
+        }
+
+        public CouchHandlerResponse ExecuteShow(CouchShowHandler handler, string documentId)
+        {
+            return ExecuteShow(handler, documentId, new NameValueCollection());
+        }
+
+        public CouchHandlerResponse ExecuteShow(CouchShowHandler handler, string documentId, NameValueCollection queryString)
+        {
+            var qs = new QueryString();
+
+            if(queryString.HasKeys())
+            {
+                qs.Add(queryString);
+            }
+
+            string path; 
+
+            if(string.IsNullOrEmpty(documentId))
+            {
+                path = string.Format("{0}/{1}{2}", Name, handler, qs);    
+            }
+            else
+            {
+                path = string.Format("{0}/{1}/{2}{3}", Name, handler, documentId, qs);
+            }
+
+            RawResponse = _connection.Get(path);
+
+            return new CouchHandlerResponse(RawResponse);
         }
 
         #endregion
@@ -384,7 +467,7 @@ namespace CouchNet.Impl
             {
                 if (response.Data.Contains("\"error\""))
                 {
-                    status = new CouchDatabaseStatusResponse(JsonConvert.DeserializeObject<CouchRawServerResponse>(response.Data));
+                    status = new CouchDatabaseStatusResponse(JsonConvert.DeserializeObject<CouchServerResponseDefinition>(response.Data));
                 }
                 return status;
             }
@@ -481,6 +564,19 @@ namespace CouchNet.Impl
         {
             var path = string.Format("{0}/{1}", Name, "_revs_limit");
             RawResponse = _connection.Put(path, limit.ToString());
+        }
+
+        private CouchDesignDocument FetchDesignDocument(string documentName)
+        {
+            var name = "_design/" + documentName;
+            var result = Get<CouchDesignDocumentDefinition>(name);
+
+            if(result == null)
+            {
+                throw new CouchNetDocumentNotFoundException(name);
+            }
+
+            return new CouchDesignDocument(result);
         }
 
         #endregion

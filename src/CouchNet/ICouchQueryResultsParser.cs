@@ -2,7 +2,7 @@ using CouchNet.HttpTransport;
 
 namespace CouchNet
 {
-    public interface ICouchResultsParser<T>
+    public interface ICouchQueryResultsParser<T>
     {
         ICouchQueryResults<T> Parse(IHttpResponse rawResponse);
     }

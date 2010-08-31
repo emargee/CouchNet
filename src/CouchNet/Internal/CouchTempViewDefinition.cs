@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 namespace CouchNet.Internal
 {
     [JsonObject]
-    internal class CouchTempViewSubmit
+    internal class CouchTempViewDefinition
     {
         [JsonProperty(PropertyName = "language")]
         public string Language { get; set; }

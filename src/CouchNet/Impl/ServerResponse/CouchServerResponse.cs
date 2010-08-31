@@ -23,7 +23,7 @@ namespace CouchNet.Impl.ServerResponse
         {
             try
             {
-                var resp = JsonConvert.DeserializeObject<CouchRawServerResponse>(response.Data, _settings);
+                var resp = JsonConvert.DeserializeObject<CouchServerResponseDefinition>(response.Data, _settings);
 
                 Id = resp.Id;
                 Revision = resp.Revision;
@@ -43,13 +43,13 @@ namespace CouchNet.Impl.ServerResponse
             }
         }
 
-        internal CouchServerResponse(CouchRawServerResponse response)
+        internal CouchServerResponse(CouchServerResponseDefinition responseDefinition)
         {
-            Id = response.Id;
-            Revision = response.Revision;
-            IsOk = response.IsOk;
-            ErrorType = response.Error;
-            ErrorMessage = response.Reason;
+            Id = responseDefinition.Id;
+            Revision = responseDefinition.Revision;
+            IsOk = responseDefinition.IsOk;
+            ErrorType = responseDefinition.Error;
+            ErrorMessage = responseDefinition.Reason;
         }
     }
 }

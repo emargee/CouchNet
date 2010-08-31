@@ -1,5 +1,5 @@
-using CouchNet.Base;
 using CouchNet.Enums;
+using CouchNet.Impl;
 
 namespace CouchNet
 {
@@ -34,31 +34,31 @@ namespace CouchNet
             return query;
         }
 
-        public static BaseViewQuery Limit(this BaseViewQuery query, int limit)
+        public static CouchViewQuery Limit(this CouchViewQuery query, int limit)
         {
             query.Limit = limit;
             return query;
         }
 
-        public static BaseViewQuery DisableInclusiveEnd(this BaseViewQuery query)
+        public static CouchViewQuery DisableInclusiveEnd(this CouchViewQuery query)
         {
             query.DisableInclusiveEnd = true;
             return query;
         }
 
-        public static BaseViewQuery IncludeDocs(this BaseViewQuery query)
+        public static CouchViewQuery IncludeDocs(this CouchViewQuery query)
         {
             query.IncludeDocs = true;
             return query;
         }
 
-        public static BaseViewQuery DisableReduce(this BaseViewQuery query)
+        public static CouchViewQuery DisableReduce(this CouchViewQuery query)
         {
             query.DisableReduce = true;
             return query;
         }
 
-        public static BaseViewQuery Skip(this BaseViewQuery query, int skip)
+        public static CouchViewQuery Skip(this CouchViewQuery query, int skip)
         {
             query.Skip = skip;
             return query;

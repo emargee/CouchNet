@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 namespace CouchNet.Internal
 {
     [JsonObject]
-    internal class CouchDocumentSummary : ICouchDocument
+    internal class CouchDocumentSummaryDefinition : ICouchDocument
     {
         [JsonProperty(PropertyName = "id")]
         public string Id { get; set; }
