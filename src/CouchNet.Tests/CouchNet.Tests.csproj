@@ -73,7 +73,7 @@
     <Compile Include="CouchCacheFixture.cs" />
     <Compile Include="CouchConnectionFixture.cs" />
     <Compile Include="CouchDatabaseFixture.cs" />
-    <Compile Include="CouchDatabaseViewFixture.cs" />
+    <Compile Include="CouchDesignDocumentFixture.cs" />
     <Compile Include="CouchHandlerFixture.cs" />
     <Compile Include="CouchViewQueryFixture.cs" />
     <Compile Include="Model\BadJsonPropertyClass.cs" />

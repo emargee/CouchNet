@@ -15,7 +15,10 @@ namespace CouchNet.Impl
         public string Map { get; set; }
         public string Reduce { get; set; }
 
-        public CouchView() { }
+        public CouchView(string viewName)
+        {
+            Name = viewName;
+        }
         
         internal CouchView(string designDocument, KeyValuePair<string, CouchViewDefinition> viewDefinition)
         {

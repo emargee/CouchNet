@@ -34,5 +34,14 @@ namespace CouchNet.Internal
 
         [JsonProperty(PropertyName = "validate_doc_update")]
         public string DocumentUpdateValidation { get; set; }
+
+        public CouchDesignDocumentDefinition()
+        {
+            Views = new Dictionary<string, CouchViewDefinition>();
+            Shows = new Dictionary<string, string>();
+            Lists = new Dictionary<string, string>();
+            RewriteHandlers = new List<CouchRewriteHandlerDefinition>();
+            DocumentUpdateHandlers = new Dictionary<string, string>();
+        }
     }
 }

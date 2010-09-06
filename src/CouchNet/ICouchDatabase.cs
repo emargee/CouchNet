@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using CouchNet.Enums;
 using CouchNet.Impl;
+using CouchNet.Impl.ServerResponse;
 
 namespace CouchNet
 {
@@ -26,6 +27,6 @@ namespace CouchNet
 
         ICouchServerResponse Copy(string fromId, string toId, string revision);
 
-        ICouchQueryResults<T> ExecuteView<T>(ICouchView view, CouchViewQuery query) where T : ICouchDocument;
+        //ICouchQueryResults<T> ExecuteView<T>(ICouchView view, CouchViewQuery query) where T : ICouchDocument;
     }
 }

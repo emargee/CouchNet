@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace CouchNet
+namespace CouchNet.Internal
 {
     [JsonObject]
     internal class CouchViewResultsRowDefinition<T> where T : ICouchDocument

@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using System.Diagnostics;
 
 using CouchNet.Impl;
@@ -14,11 +15,10 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
             var db = new CouchDatabase(conn, "integrationtest");
-            var view = db.GetView("example", "stringtest");
 
             var query = new CouchViewQuery().Key("apple");
 
-            var results = db.ExecuteView<TestEntity>(view, query);
+            var results = db.DesignDocument("example").ExecuteView<TestEntity>("stringtest", query);
 
             Debug.WriteLine("-----------------------------------------");
 
@@ -50,11 +50,10 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
             var db = new CouchDatabase(conn, "integrationtest");
-            var view = db.GetView("example", "stringtest");
 
             var query = new CouchViewQuery().Key("apple").Limit(0);
 
-            var results = db.ExecuteView<TestEntity>(view, query);
+            var results = db.DesignDocument("example").ExecuteView<TestEntity>("stringtest", query);
 
             Debug.WriteLine("-----------------------------------------");
 
@@ -87,14 +86,10 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
             var db = new CouchDatabase(conn, "integrationtest");
-            var view = db.GetView("example", "arraytest");
 
             var query = new CouchViewQuery().Key(new[] { "apple", "orange" });
 
-            Debug.WriteLine("View : " + view.ToString());
-            Debug.WriteLine("Query : " + query.ToString());
-
-            var results = db.ExecuteView<TestEntity>(view, query);
+            var results = db.DesignDocument("example").ExecuteView<TestEntity>("arraytest", query);
 
             Debug.WriteLine("-----------------------------------------");
 
@@ -126,11 +121,10 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
             var db = new CouchDatabase(conn, "integrationtest");
-            var view = db.GetView("example", "arraytest");
 
             var query = new CouchViewQuery().Key(new[] { "apple", "orange" }).Limit(0);
 
-            var results = db.ExecuteView<TestEntity>(view, query);
+            var results = db.DesignDocument("example").ExecuteView<TestEntity>("arraytest", query);
 
             Debug.WriteLine("-----------------------------------------");
 
@@ -163,14 +157,10 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
             var db = new CouchDatabase(conn, "integrationtest");
-            var view = db.GetView("example", "arraytest");
 
             var query = new CouchViewQuery().Key(new[] { "apple", "cats" }).EndKey(new[] { "apple", "*" });
 
-            Debug.WriteLine("View : " + view.ToString());
-            Debug.WriteLine("Query : " + query.ToString());
-
-            var results = db.ExecuteView<TestEntity>(view, query);
+            var results = db.DesignDocument("example").ExecuteView<TestEntity>("arraytest", query);
 
             Debug.WriteLine("-----------------------------------------");
 
@@ -203,7 +193,7 @@ namespace CouchNet.Tests.Integration
             var conn = new CouchConnection("http://localhost:5984/");
             var db = new CouchDatabase(conn, "unittest");
             var temp = new CouchTempView { Map = "function(doc) {\n  emit(null, doc);\n}" };
-            var results = db.ExecuteView<BusinessCard>(temp, new CouchViewQuery());
+            var results = db.ExecuteTempView<BusinessCard>(temp, new CouchViewQuery());
 
             if (results.IsOk)
             {
@@ -225,27 +215,86 @@ namespace CouchNet.Tests.Integration
             }
         }
 
-        public void DesignDoc()
+        [Test]
+        public void Show_CanExecuteCorrectly()
         {
-            //What purpose does a DesignDocument object serve ?
-            //1>Info function
-            //2>list of views
+            var conn = new CouchConnection("http://localhost:5984/");
+            var db = new CouchDatabase(conn, "unittest");
 
-            //var db = new CouchDatabase(_conn, "unitest");
+            var result = db.DesignDocument("example").ExecuteShow("test");
+            Debug.WriteLine(result.Output);
 
-            //var newView = new CouchView("example", "monkeyview");
-            //newView.Map = "blah";
-            //newView.Reduce = "blah";
-            //newView.Langauge = "badgers";
+            result = db.DesignDocument("example").ExecuteShow("test", "e99b84cd49824eaf90b5f5c164b39e12");
+            Debug.WriteLine(result.Output);
 
-            //db.SaveChanges(newView);
+            result = db.DesignDocument("example").ExecuteShow("test", "e99b84cd49824eaf90b5f5c164b39e12", new NameValueCollection { { "format", "xml" } });
+            Debug.WriteLine(result.Output);
+        }
 
-            //ICouchDesignDocument doc = db.GetDesignDocument("example");
-            //var view = doc.View["monkeyview"];
-            //var info = doc.Info();
-            //doc.SaveChanges();
+        [Test]
+        public void List_CanExecuteCorrectly()
+        {
+            var conn = new CouchConnection("http://localhost:5984/");
+            var db = new CouchDatabase(conn, "unittest");
 
-            //db.ExecuteView<BusinessCard>(newView, new BaseViewQuery());
+            var result = db.DesignDocument("example").ExecuteList("htmlList", "test", new CouchViewQuery());
+
+            Debug.WriteLine(result.Output);
+
+            var query = new CouchViewQuery().Key("e99b84cd49824eaf90b5f5c164b39e12");
+            result = db.DesignDocument("example").ExecuteList("htmlList", "test", query );
+
+            Debug.WriteLine(result.Output);
+        }
+
+        [Test]
+        public void NewSyntax()
+        {
+            var conn = new CouchConnection("http://localhost:5984/");
+            var db = new CouchDatabase(conn, "unittest");
+            var doc = db.DesignDocument("example");
+
+            //-[ View Execution ]---------------------------------------------
+
+            var results = doc.ExecuteView<BusinessCard>("test", new CouchViewQuery());
+
+            if (results.IsOk && results.HasResults)
+            {
+                foreach (var i in results)
+                {
+                    Debug.WriteLine(i.Name);
+                }
+            }
+
+            //-[ Add New View ]---------------------------------------------
+
+            //var newView = new CouchView("myNewView");
+            //newView.Map = "function(test)";
+            //newView.Reduce = "function(blah);
+            //doc.Add(newView);
+            //db.SaveChanges(doc);
+
+            //-[ Edit Existing View ]---------------------------------------------
+
+
+            //var oldView = doc.View("test");
+            //Debug.WriteLine(oldView.Map);
+
+            //doc.View("test").Map = "function(new)"; //Set HasChanges()
+
+            //Debug.WriteLine(doc.View("test").Map);
+
+            //db
+
+            //-[ Show ]---------------------------------------------
+            //var results = doc.ExecuteShow(doc.Show("test"));
+            //var results = doc.ExecuteShow(doc.Show("test"),"docId");
+            var showResults = doc.ExecuteShow("test", "e99b84cd49824eaf90b5f5c164b39e12", new NameValueCollection { { "format", "xml" } });
+
+            if (showResults.IsOk)
+            {
+                Debug.WriteLine(showResults.Output);
+            }
         }
     }
 

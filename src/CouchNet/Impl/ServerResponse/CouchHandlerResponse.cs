@@ -1,4 +1,5 @@
 using CouchNet.HttpTransport;
+using CouchNet.Internal;
 
 namespace CouchNet.Impl.ServerResponse
 {

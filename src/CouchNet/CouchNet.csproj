@@ -63,6 +63,7 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Impl\ServerResponse\CouchDesignDocumentInfoResponse.cs" />
     <Compile Include="Enums\CouchBulkUpdateBehaviour.cs" />
     <Compile Include="Enums\CouchDocumentOptions.cs" />
     <Compile Include="Enums\CouchDocumentRevisionStatus.cs" />
@@ -94,6 +95,8 @@
     <Compile Include="Impl\ResultParsers\CouchQueryGeneralResultsParser.cs" />
     <Compile Include="Internal\CouchAllDocsResultRowDefinition.cs" />
     <Compile Include="Internal\CouchDesignDocumentDefinition.cs" />
+    <Compile Include="Internal\CouchDesignDocumentInfoDataDefinition.cs" />
+    <Compile Include="Internal\CouchDesignDocumentInfoDefinition.cs" />
     <Compile Include="Internal\CouchDocumentCollectionDefinition.cs" />
     <Compile Include="Impl\ResultParsers\CouchQueryViewResultsParser.cs" />
     <Compile Include="Internal\CouchRewriteHandlerDefinition.cs" />

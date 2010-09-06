@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Net;
 using CouchNet.Enums;
+using CouchNet.Exceptions;
 using CouchNet.HttpTransport;
 using CouchNet.Impl;
 using CouchNet.Tests.Model;
@@ -49,6 +51,10 @@ namespace CouchNet.Tests
         private Mock<IHttpResponse> _getManyErrorResponse;
         private Mock<IHttpResponse> _copyResponse;
         private Mock<IHttpResponse> _copyErrorResponse;
+        private Mock<IHttpResponse> _viewEmptyResults;
+        private Mock<IHttpResponse> _designDocument;
+        private Mock<IHttpResponse> _designDocumentError;
+        private Mock<IHttpResponse> _executeViewResult;
 
         [SetUp]
         public void Setup()
@@ -84,6 +90,7 @@ namespace CouchNet.Tests
 
             _statusResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
             _statusResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
+            _statusResponse.Setup(s => s.ETag).Returns("1234");
             _statusResponse.Setup(s => s.Data).Returns("{\"db_name\":\"unittest\",\"doc_count\":1,\"doc_del_count\":30,\"update_seq\":85,\"purge_seq\":0,\"compact_running\":false,\"disk_size\":53339,\"instance_start_time\":\"1268879146201288\",\"disk_format_version\":4}");
 
             _statusErrorResponse = new Mock<IHttpResponse>(MockBehavior.Strict);
@@ -198,6 +205,21 @@ namespace CouchNet.Tests
             _copyErrorResponse.Setup(s => s.StatusCode).Returns(HttpStatusCode.NotFound);
             _copyErrorResponse.Setup(s => s.Data).Returns("{\"error\":\"not_found\",\"reason\":\"missing\"}");
 
+            _viewEmptyResults = new Mock<IHttpResponse>(MockBehavior.Strict);
+            _viewEmptyResults.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
+            _viewEmptyResults.Setup(s => s.Data).Returns("{\"total_rows\":4,\"offset\":2,\"rows\":[]}");
+
+            _designDocument = new Mock<IHttpResponse>(MockBehavior.Strict);
+            _designDocument.Setup(s => s.StatusCode).Returns(HttpStatusCode.OK);
+            _designDocument.Setup(s => s.Data).Returns("{ \"_id\": \"_design/example\",\"_rev\": \"35-6c7904fb18e7230bcab920e88f158f80\",\"language\": \"javascript\",\"views\": { \"test\": { \"map\": \"function(doc) {\n  emit(doc._id, doc);\n}\" } } }");
+
+            _designDocumentError = new Mock<IHttpResponse>(MockBehavior.Strict);
+            _designDocumentError.Setup(s => s.Data).Returns("{\"error\":\"not_found\",\"reason\":\"missing\"}");
+            _designDocumentError.Setup(s => s.StatusCode).Returns(HttpStatusCode.NotFound);
+
+            _executeViewResult = new Mock<IHttpResponse>(MockBehavior.Strict);
+            _executeViewResult.Setup(x => x.Data).Returns("{\"total_rows\":12,\"offset\":0,\"rows\":[ {\"id\":\"089b887ff7b04a5bb31b68695f5cff01\",\"key\":\"089b887ff7b04a5bb31b68695f5cff01\",\"value\":{\"_id\":\"089b887ff7b04a5bb31b68695f5cff01\",\"_rev\":\"2-ac00e75612ab513f24c4da91d934918d\",\"name\":\"Bobby Smith\",\"JobTitle\":\"Manager\",\"Employer\":\"GiantMart\"}}]}");
+            _executeViewResult.Setup(x => x.StatusCode).Returns(HttpStatusCode.OK);
         }
 
         [Test]
@@ -1076,5 +1098,139 @@ namespace CouchNet.Tests
             Assert.IsFalse(resp.IsOk);
             Assert.IsNotNull(resp.ErrorMessage);
         }
+
+        #region Design Document Access
+
+        [Test]
+        public void GetDesignDocument()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(x => x.Get("unittest/_design/example")).Returns(_designDocument.Object);
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+            var doc = db.DesignDocument("example");
+            
+            Assert.IsNotNull(doc);
+            Assert.AreEqual("javascript", doc.Language);
+            Assert.AreEqual("_design/example", doc.Id);
+            Assert.AreEqual("example",doc.Name);
+            Assert.AreEqual(1, doc.ViewCount);
+        }
+
+        [Test]
+        public void GetDesignDocument_EmptyDocument()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(x => x.Get("unittest/_design/example")).Returns(_designDocumentError.Object);
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+            Assert.Throws<CouchNetDocumentNotFoundException>(() => db.DesignDocument("example"));
+        }
+
+        #endregion
+
+        #region Temp Views
+
+        [Test]
+        public void TempView_CanSerialize()
+        {
+            var temp = new CouchTempView
+            {
+                Map = "function(doc) { if (doc.foo=='bar') { emit(null, doc.foo); } }",
+                Reduce = "function (key, values, rereduce) { return sum(values); }"
+            };
+
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(x => x.Post("unittest/_temp_view", "{\"language\":\"javascript\",\"map\":\"function(doc) { if (doc.foo=='bar') { emit(null, doc.foo); } }\",\"reduce\":\"function (key, values, rereduce) { return sum(values); }\"}", "application/json")).Returns(_viewEmptyResults.Object);
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+            var resp = db.ExecuteTempView<CouchDocument>(temp, new CouchViewQuery());
+            Assert.IsTrue(resp.IsOk);
+            Assert.IsFalse(resp.HasResults);
+            Assert.AreEqual(0, resp.Count);
+        }
+
+        [Test]
+        public void TempView_EmptyObject_ShouldThrow()
+        {
+            var temp = new CouchTempView();
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+            Assert.Throws<ArgumentException>(() => db.ExecuteTempView<CouchDocument>(temp, new CouchViewQuery()));
+        }
+
+        [Test]
+        public void TempView_OnlyReduce_ShouldThrow()
+        {
+            var temp = new CouchTempView
+                           {
+                               Reduce = "blargh"
+                           };
+
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+            Assert.Throws<ArgumentException>(() => db.ExecuteTempView<CouchDocument>(temp, new CouchViewQuery()));
+        }
+
+        #endregion
+
+        #region Quick View Access
+
+        [Test]
+        public void QuickExecuteView_ShouldReturn()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(x => x.Get("unittest/_design/example")).Returns(_designDocument.Object);
+            _connectionMock.Setup(x => x.Get("unittest/_design/example/_view/test?key=%22089b887ff7b04a5bb31b68695f5cff01%22")).Returns(_executeViewResult.Object);
+
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+
+            var query = new CouchViewQuery().Key("089b887ff7b04a5bb31b68695f5cff01");
+
+            var results = db.ExecuteView<ExampleEntity>("example", "test", query);
+
+            Assert.IsNotNull(results);
+            Assert.IsTrue(results.IsOk);
+            Assert.IsTrue(results.HasResults);
+            Assert.AreEqual(results.Count, 1);
+            Assert.AreEqual("089b887ff7b04a5bb31b68695f5cff01",results[0].Id);
+        }
+
+        [Test]
+        public void QuickExecuteView_UnknownDesignDoc_ShouldThrow()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(x => x.Get("unittest/_design/badgers")).Returns(_designDocumentError.Object);
+
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+
+            var query = new CouchViewQuery().Key("089b887ff7b04a5bb31b68695f5cff01");
+
+            Assert.Throws<CouchNetDocumentNotFoundException>(
+                () => db.ExecuteView<ExampleEntity>("badgers", "test", query));
+        }
+
+        [Test]
+        public void QuickExecuteView_UnknownView_ShouldThrow()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(x => x.Get("unittest/_design/example")).Returns(_designDocument.Object);
+
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+
+            var query = new CouchViewQuery().Key("089b887ff7b04a5bb31b68695f5cff01");
+
+            Assert.Throws<CouchNetDocumentNotFoundException>(() => db.ExecuteView<ExampleEntity>("example", "squirrels", query));
+        }
+
+        [Test]
+        public void QuickExecuteShow_NoShowsReturned_ShouldThrow()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(x => x.Get("unittest/_design/example")).Returns(_designDocument.Object);
+
+            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+
+            Assert.Throws<CouchNetDocumentNotFoundException>(() => db.ExecuteShow("example", "test", "089b887ff7b04a5bb31b68695f5cff01",new NameValueCollection()));
+        }
+
+        #endregion
     }
 }

@@ -71,13 +71,21 @@ namespace CouchNet.Tests.Integration
 
             //Debug.WriteLine(db.ExecuteShow(show, "e99b84cd49824eaf90b5f5c164b39e12", qs));
 
-            var doc = db.DesignDocument("example");
-            var list = doc.List("htmlList");
-            var view = doc.View("test");
-            var resp = db.ExecuteList(list, view, new CouchViewQuery());
+            //var doc = db.DesignDocument("example");
+            //var list = doc.List("htmlList");
+            //var view = doc.View("test");
+            //var resp = db.ExecuteList(list, view, new CouchViewQuery());
 
-            Debug.WriteLine(resp.ContentType);
-            Debug.WriteLine(resp.Output);
+            //Debug.WriteLine(resp.ContentType);
+            //Debug.WriteLine(resp.Output);
+
+            //var docExample = db.DesignDocument("example");
+            //docExample.Info();
+            //docExample.View("test").Execute<BusinessCard>();
+            //docExample.Show("test").Execute<BusinessCard>(documentId, queryStringParams);
+            //docExample.View("test").ExecuteList();
+
+
 
             //var query = new CouchViewQuery { Key = "e99b84cd49824eaf90b5f5c164b39e12" };
 
@@ -130,9 +138,9 @@ namespace CouchNet.Tests.Integration
             var conn = new CouchConnection("http://localhost", 5984);
             var db = new CouchDatabase(conn, "unittest");
 
-            var view = db.DesignDocument("example").View("test");
+            //var view = db.DesignDocument("example").View("test");
 
-            Debug.WriteLine(view.Name);
+            //Debug.WriteLine(view.Name);
 
             //var results = db.ExecuteView<BusinessCard>(view, new CouchViewQuery("e99b84cd49824eaf90b5f5c164b39e12"));
 

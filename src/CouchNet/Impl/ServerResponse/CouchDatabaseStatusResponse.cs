@@ -1,4 +1,7 @@
+using System;
+using System.Net;
 using CouchNet.HttpTransport;
+using CouchNet.Internal;
 using Newtonsoft.Json;
 
 namespace CouchNet.Impl.ServerResponse
@@ -26,26 +29,51 @@ namespace CouchNet.Impl.ServerResponse
 
         public CouchDatabaseStatusResponse() { }
 
-        internal CouchDatabaseStatusResponse(CouchServerResponseDefinition responseDefinition)
+        internal CouchDatabaseStatusResponse(IHttpResponse rawResponse)
         {
-            IsOk = responseDefinition.IsOk;
-            ErrorType = responseDefinition.Error;
-            ErrorMessage = responseDefinition.Reason;
-        }
+            if (rawResponse.StatusCode != HttpStatusCode.OK)
+            {
+                if (rawResponse.Data.Contains("\"error\""))
+                {
+                    var resp = JsonConvert.DeserializeObject<CouchServerResponseDefinition>(rawResponse.Data);
+                    IsOk = resp.IsOk;
+                    ErrorType = resp.Error;
+                    ErrorMessage = resp.Reason;
+                    return;
+                }
+            }
 
-        internal CouchDatabaseStatusResponse(IHttpResponse response)
-        {
-            var status = JsonConvert.DeserializeObject<CouchDatabaseStatusDefinition>(response.Data, _settings);
-            IsOk = true;
-            DatabaseName = status.DatabaseName;
-            DocumentCount = status.DocumentCount;
-            DocumentDeletedCount = status.DocumentDeletedCount;
-            UpdateSequence = status.UpdateSequence;
-            PurgeSequence = status.PurgeSequence;
-            IsCompactRunning = status.IsCompactRunning;
-            DiskSize = status.DiskSize;
-            InstanceStartTime = status.InstanceStartTime;
-            DiskFormatVersion = status.DiskFormatVersion;
+            try
+            {
+                var status = JsonConvert.DeserializeObject<CouchDatabaseStatusDefinition>(rawResponse.Data, _settings);
+
+                Id = rawResponse.ETag;
+                Revision = rawResponse.ETag;
+                IsOk = true;
+                DatabaseName = status.DatabaseName;
+                DocumentCount = status.DocumentCount;
+                DocumentDeletedCount = status.DocumentDeletedCount;
+                UpdateSequence = status.UpdateSequence;
+                PurgeSequence = status.PurgeSequence;
+                IsCompactRunning = status.IsCompactRunning;
+                DiskSize = status.DiskSize;
+                InstanceStartTime = status.InstanceStartTime;
+                DiskFormatVersion = status.DiskFormatVersion;
+            }
+
+            catch (Exception ex)
+            {
+                if (ex is JsonReaderException)
+                {
+                    IsOk = false;
+                    ErrorType = "CouchNet Deserialization Error";
+                    ErrorMessage = "Failed to deserialize server response (" + rawResponse.Data + ") - Extra Info : " + ex.Message;
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
     }
 }

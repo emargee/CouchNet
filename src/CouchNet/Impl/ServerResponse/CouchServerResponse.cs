@@ -1,5 +1,6 @@
 using System;
 using CouchNet.HttpTransport;
+using CouchNet.Internal;
 using Newtonsoft.Json;
 
 namespace CouchNet.Impl.ServerResponse
@@ -8,6 +9,7 @@ namespace CouchNet.Impl.ServerResponse
     {
         public string Id { get; private set; }
         public string Revision { get; private set; }
+
         public bool IsOk { get; private set; }
         public string ErrorType { get; private set; }
         public string ErrorMessage { get; private set; }

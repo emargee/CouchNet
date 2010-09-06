@@ -143,8 +143,7 @@ namespace CouchNet.Impl
 
         public ICouchQueryResults<T> GetMany<T>(IEnumerable<string> ids) where T : ICouchDocument
         {
-            var query = new CouchViewQuery();
-            query.IncludeDocs = true;
+            var query = new CouchViewQuery { IncludeDocs = true };
 
             var path = string.Format("{0}/_all_docs{1}", Name, query);
 
@@ -344,102 +343,48 @@ namespace CouchNet.Impl
 
         public CouchDesignDocument DesignDocument(string name)
         {
-            //var cached = DesignDocuments.Find(x => x.Name == name);
-
-            //if (cached != null)
-            //{
-            //    return cached;
-            //}
-
-            //var doc = FetchDesignDocument(name);
-
-            //DesignDocuments.Add(doc);
-            //return doc;
-
             return FetchDesignDocument(name);
-        }
-
-        //public CouchDesignDocumentInfo DesignDocumentInfo(CouchDesignDocument document)
-        //{
-            
-        //}
-
-        public CouchView GetView(string designDocument, string name)
-        {
-            return DesignDocument(designDocument).View(name);
         }
 
         public ICouchQueryResults<T> ExecuteView<T>(string designDocument, string viewName, CouchViewQuery query) where T : ICouchDocument
         {
-            return ExecuteView<T>(DesignDocument(designDocument).View(viewName), query);
+            var doc = DesignDocument(designDocument);
+
+            return doc.ExecuteView<T>(viewName, query);
         }
 
-        public ICouchQueryResults<T> ExecuteView<T>(ICouchView view, CouchViewQuery query) where T : ICouchDocument
+        public CouchHandlerResponse ExecuteShow(string designDocument, string showHandlerName, string documentId, NameValueCollection queryString)
         {
-            var path = string.Format("{0}/{1}{2}", Name, view, query);
+            var doc = DesignDocument(designDocument);
 
-            if(view.GetType() == typeof(CouchTempView))
+            return doc.ExecuteShow(showHandlerName,documentId, queryString);
+        }
+
+        public CouchHandlerResponse ExecuteList(string designDocument, string listHandlerName, string viewName, CouchViewQuery query)
+        {
+            var doc = DesignDocument(designDocument);
+
+            return doc.ExecuteList(listHandlerName, viewName, query);
+        }
+
+        public ICouchQueryResults<T> ExecuteTempView<T>(CouchTempView view, CouchViewQuery query) where T : ICouchDocument
+        {
+            if(string.IsNullOrEmpty(view.Map) && string.IsNullOrEmpty(view.Reduce))
             {
-                path = string.Format("{0}/{1}{2}", Name, view, query);
-                RawResponse = _connection.Post(path, ((CouchTempView)view).ToJson(), "application/json");
+                throw new ArgumentException("Please provide MAP or MAP & REDUCE functions.");
             }
-            else
+
+            if(string.IsNullOrEmpty(view.Map) && !string.IsNullOrEmpty(view.Reduce))
             {
-                RawResponse = _connection.Get(path);    
+                throw new ArgumentException("Cannot have a REDUCE function without a MAP function.");
             }
+
+            var path = string.Format("{0}/{1}{2}", Name, view, query);
+            RawResponse = _connection.Post(path, view.ToJson(), "application/json");
 
             var results = new CouchQueryViewResultsParser<T>().Parse(RawResponse);
 
             return results;
-        }
-
-        public CouchHandlerResponse ExecuteList(CouchListHandler handler, ICouchView view, CouchViewQuery query)
-        {
-            var path = string.Format("{0}/{1}/{2}{3}", Name, handler, view.Name, query);
-
-            RawResponse = _connection.Get(path);
-
-            return new CouchHandlerResponse(RawResponse);
-        }
-
-        public CouchHandlerResponse ExecuteShow(CouchShowHandler handler)
-        {
-            return ExecuteShow(handler, null, new NameValueCollection());
-        }
-
-        public CouchHandlerResponse ExecuteShow(CouchShowHandler handler, NameValueCollection queryString)
-        {
-            return ExecuteShow(handler, null, queryString);
-        }
-
-        public CouchHandlerResponse ExecuteShow(CouchShowHandler handler, string documentId)
-        {
-            return ExecuteShow(handler, documentId, new NameValueCollection());
-        }
-
-        public CouchHandlerResponse ExecuteShow(CouchShowHandler handler, string documentId, NameValueCollection queryString)
-        {
-            var qs = new QueryString();
-
-            if(queryString.HasKeys())
-            {
-                qs.Add(queryString);
-            }
-
-            string path; 
-
-            if(string.IsNullOrEmpty(documentId))
-            {
-                path = string.Format("{0}/{1}{2}", Name, handler, qs);    
-            }
-            else
-            {
-                path = string.Format("{0}/{1}/{2}{3}", Name, handler, documentId, qs);
-            }
-
-            RawResponse = _connection.Get(path);
-
-            return new CouchHandlerResponse(RawResponse);
         }
 
         #endregion
@@ -454,26 +399,19 @@ namespace CouchNet.Impl
 
         #endregion
 
-        #region Database Utility Methods
+        #region Information Objects
 
         public CouchDatabaseStatusResponse Status()
         {
             var path = Name;
-            var response = _connection.Get(path);
+            RawResponse = _connection.Get(path);
 
-            var status = new CouchDatabaseStatusResponse();
-
-            if (response.StatusCode != HttpStatusCode.OK)
-            {
-                if (response.Data.Contains("\"error\""))
-                {
-                    status = new CouchDatabaseStatusResponse(JsonConvert.DeserializeObject<CouchServerResponseDefinition>(response.Data));
-                }
-                return status;
-            }
-
-            return new CouchDatabaseStatusResponse(response);
+            return new CouchDatabaseStatusResponse(RawResponse);
         }
+
+        #endregion
+
+        #region Database Utility Methods
 
         public ICouchServerResponse BeginCompact()
         {
@@ -507,7 +445,7 @@ namespace CouchNet.Impl
                 document.Id = Guid.NewGuid().ToString().ToLower().Replace("{", string.Empty).Replace("}", string.Empty).Replace("-", string.Empty);
             }
 
-            string jsonString = string.Empty;
+            string jsonString;
 
             try
             {
@@ -571,12 +509,12 @@ namespace CouchNet.Impl
             var name = "_design/" + documentName;
             var result = Get<CouchDesignDocumentDefinition>(name);
 
-            if(result == null)
+            if (result == null)
             {
                 throw new CouchNetDocumentNotFoundException(name);
             }
 
-            return new CouchDesignDocument(result);
+            return new CouchDesignDocument(result, Name, _connection);
         }
 
         #endregion

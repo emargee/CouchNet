@@ -4,6 +4,7 @@ using System.Net;
 using CouchNet.HttpTransport;
 using CouchNet.Impl.QueryResults;
 using CouchNet.Impl.ServerResponse;
+using CouchNet.Internal;
 using Newtonsoft.Json;
 
 namespace CouchNet.Impl.ResultParsers
