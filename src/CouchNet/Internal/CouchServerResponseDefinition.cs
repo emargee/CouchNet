@@ -6,7 +6,7 @@ namespace CouchNet.Internal
     internal class CouchServerResponseDefinition
     {
         [JsonProperty(PropertyName = "ok")]
-        public bool IsOk { get; set; }
+        public bool? IsOk { get; set; }
 
         [JsonProperty(PropertyName = "id")]
         public string Id { get; set; }

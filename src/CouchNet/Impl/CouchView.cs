@@ -9,7 +9,7 @@ namespace CouchNet.Impl
     {
         private readonly JsonSerializerSettings _settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, MissingMemberHandling = MissingMemberHandling.Ignore };
 
-        public string DesignDocument { get; internal set; }
+        private string DesignDocument { get; set; }
         public string Name { get; internal set; }        
 
         public string Map { get; set; }

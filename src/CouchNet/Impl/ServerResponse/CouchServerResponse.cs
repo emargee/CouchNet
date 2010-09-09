@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using CouchNet.HttpTransport;
 using CouchNet.Internal;
 using Newtonsoft.Json;
@@ -29,7 +30,16 @@ namespace CouchNet.Impl.ServerResponse
 
                 Id = resp.Id;
                 Revision = resp.Revision;
-                IsOk = resp.IsOk;
+
+                if(resp.IsOk.HasValue)
+                {
+                    IsOk = resp.IsOk.Value;
+                }
+                else
+                {
+                    IsOk = response.StatusCode == HttpStatusCode.Created;
+                }
+
                 ErrorType = resp.Error;
                 ErrorMessage = resp.Reason;
             }
@@ -49,7 +59,7 @@ namespace CouchNet.Impl.ServerResponse
         {
             Id = responseDefinition.Id;
             Revision = responseDefinition.Revision;
-            IsOk = responseDefinition.IsOk;
+            IsOk = responseDefinition.IsOk.GetValueOrDefault(false);
             ErrorType = responseDefinition.Error;
             ErrorMessage = responseDefinition.Reason;
         }

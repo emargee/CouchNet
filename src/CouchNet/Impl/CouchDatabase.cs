@@ -470,7 +470,7 @@ namespace CouchNet.Impl
 
             RawResponse = _connection.Get(path);
 
-            if (RawResponse.StatusCode != HttpStatusCode.OK)
+            if (RawResponse.StatusCode != HttpStatusCode.OK && RawResponse.StatusCode != HttpStatusCode.NotModified)
             {
                 return default(T);
             }
@@ -483,7 +483,7 @@ namespace CouchNet.Impl
             var path = string.Format("{0}/{1}", Name, "_revs_limit");
             RawResponse = _connection.Get(path);
 
-            if (RawResponse.StatusCode != HttpStatusCode.OK)
+            if (RawResponse.StatusCode != HttpStatusCode.OK && RawResponse.StatusCode != HttpStatusCode.NotModified)
             {
                 return -1;
             }

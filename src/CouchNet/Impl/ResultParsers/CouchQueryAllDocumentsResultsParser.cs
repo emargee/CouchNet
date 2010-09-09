@@ -16,7 +16,7 @@ namespace CouchNet.Impl.ResultParsers
         {
             var results = new CouchQueryResults<T>();
 
-            if (rawResponse.StatusCode != HttpStatusCode.OK)
+            if (rawResponse.StatusCode != HttpStatusCode.OK && rawResponse.StatusCode != HttpStatusCode.NotModified)
             {
                 if (rawResponse.Data.Contains("\"error\""))
                 {

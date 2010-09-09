@@ -9,20 +9,32 @@ namespace CouchNet.Impl.ServerResponse
     public class CouchDatabaseStatusResponse : ICouchServerResponse
     {
         public string Id { get; private set; }
+        
         public string Revision { get; private set; }
 
         public bool IsOk { get; private set; }
+        
         public string ErrorType { get; private set; }
+        
         public string ErrorMessage { get; private set; }
 
         public string DatabaseName { get; set; }
+        
         public int DocumentCount { get; set; }
+        
         public int DocumentDeletedCount { get; set; }
-        public int UpdateSequence { get; set; }
+        
+        //NOTE: Cloudant uses a string
+        public string UpdateSequence { get; set; }
+        
         public int PurgeSequence { get; set; }
+        
         public bool IsCompactRunning { get; set; }
+        
         public int DiskSize { get; set; }
+        
         public string InstanceStartTime { get; set; }
+        
         public int DiskFormatVersion { get; set; }
 
         private readonly JsonSerializerSettings _settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
@@ -31,12 +43,12 @@ namespace CouchNet.Impl.ServerResponse
 
         internal CouchDatabaseStatusResponse(IHttpResponse rawResponse)
         {
-            if (rawResponse.StatusCode != HttpStatusCode.OK)
+            if (rawResponse.StatusCode != HttpStatusCode.OK && rawResponse.StatusCode != HttpStatusCode.NotModified)
             {
                 if (rawResponse.Data.Contains("\"error\""))
                 {
                     var resp = JsonConvert.DeserializeObject<CouchServerResponseDefinition>(rawResponse.Data);
-                    IsOk = resp.IsOk;
+                    IsOk = resp.IsOk.GetValueOrDefault(false);
                     ErrorType = resp.Error;
                     ErrorMessage = resp.Reason;
                     return;

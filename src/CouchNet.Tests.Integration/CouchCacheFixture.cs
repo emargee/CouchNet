@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net;
 using CouchNet.Impl;
 using CouchNet.Impl.Caching;
+using CouchNet.Tests.Integration.Model;
 using NUnit.Framework;
 
 namespace CouchNet.Tests.Integration
@@ -58,6 +59,25 @@ namespace CouchNet.Tests.Integration
             Debug.WriteLine("--------------------------------");
 
             Assert.AreEqual(HttpStatusCode.NotModified, resp2.StatusCode);
+        }
+
+        [Test]
+        public void CacheObjectTest()
+        {
+            var conn = new CouchConnection("http://localhost:5984");
+
+            var cache = new HttpRuntimeCache { ExpirationWindow = 5 };
+            conn.Cache = cache;
+
+            var db = new CouchDatabase(conn, "integrationtest");
+
+            var resp = db.Get<BusinessCard>("d1d2bac2b4e65baf10be20bf08000189");
+            Debug.WriteLine("Name : " + resp.Name);
+            Debug.WriteLine("--------------------------------");
+
+            var resp2 = db.Get<BusinessCard>("d1d2bac2b4e65baf10be20bf08000189");
+            Debug.WriteLine("Name : " + resp2.Name);
+            Debug.WriteLine("--------------------------------");
         }
     }
 }

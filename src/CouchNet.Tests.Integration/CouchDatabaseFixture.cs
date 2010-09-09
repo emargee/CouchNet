@@ -76,5 +76,15 @@ namespace CouchNet.Tests.Integration
             Assert.IsNotNull(db.RawResponse);
             Assert.AreEqual(HttpStatusCode.Created, db.RawResponse.StatusCode);
         }
+
+        [Test]
+        public void Database_CanGetStatus()
+        {
+            var conn = new CouchConnection("http://127.0.0.1", 5984);
+            var db = new CouchDatabase(conn, "integrationtest");
+
+            var status = db.Status();
+            Assert.AreEqual("integrationtest", status.DatabaseName);
+        }
     }
 }

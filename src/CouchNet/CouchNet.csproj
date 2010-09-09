@@ -105,8 +105,8 @@
     <Compile Include="Internal\CouchViewResultsRowDefinition.cs" />
     <Compile Include="Internal\CouchDatabaseStatusDefinition.cs" />
     <Compile Include="Impl\CouchDocument.cs" />
-    <Compile Include="Impl\CouchDocumentRevisionInfo.cs" />
-    <Compile Include="Impl\CouchDocumentRevisions.cs" />
+    <Compile Include="CouchDocumentRevisionInfoDefinition.cs" />
+    <Compile Include="CouchDocumentRevisions.cs" />
     <Compile Include="Impl\QueryResults\CouchQueryResults.cs" />
     <Compile Include="Internal\CouchViewResultsDefinition.cs" />
     <Compile Include="Internal\CouchServerResponseDefinition.cs" />

@@ -29,12 +29,12 @@ namespace CouchNet
 
         internal CouchDesignDocumentInfoResponse(IHttpResponse rawResponse)
         {
-            if (rawResponse.StatusCode != HttpStatusCode.OK)
+            if (rawResponse.StatusCode != HttpStatusCode.OK && rawResponse.StatusCode != HttpStatusCode.NotModified)
             {
                 if (rawResponse.Data.Contains("\"error\""))
                 {
                     var resp = JsonConvert.DeserializeObject<CouchServerResponseDefinition>(rawResponse.Data);
-                    IsOk = resp.IsOk;
+                    IsOk = resp.IsOk.GetValueOrDefault(false);
                     ErrorType = resp.Error;
                     ErrorMessage = resp.Reason;
                     return;

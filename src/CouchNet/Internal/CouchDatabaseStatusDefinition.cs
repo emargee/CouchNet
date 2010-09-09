@@ -15,7 +15,7 @@ namespace CouchNet.Internal
         public int DocumentDeletedCount { get; set; }
 
         [JsonProperty(PropertyName = "update_seq")]
-        public int UpdateSequence { get; set; }
+        public string UpdateSequence { get; set; }
 
         [JsonProperty(PropertyName = "purge_seq")]
         public int PurgeSequence { get; set; }

@@ -25,5 +25,12 @@ namespace CouchNet.Impl
 
         [JsonProperty(PropertyName = "_deleted_conflicts")]
         public string[] DeletedConflicts { get; set; }
+
+        //public CouchDocument()
+        //{
+        //    Conflicts = new string[0];
+        //    DeletedConflicts = new string[0];
+        //    RevisionsInfo = new CouchDocumentRevisionInfo[0];
+        //}
     }
 }

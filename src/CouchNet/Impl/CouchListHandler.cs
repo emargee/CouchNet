@@ -4,7 +4,7 @@ namespace CouchNet.Impl
 {
     public class CouchListHandler : ICouchHandler
     {
-        public string DesignDocument { get; private set; }
+        private string DesignDocument { get; set; }
         public string Name { get; set; }
         public object Function { get; set; }
 
