@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Net;
-using System.Net.Cache;
 using System.Text;
 using Microsoft.Http;
 using Microsoft.Http.Headers;
@@ -29,7 +28,7 @@ namespace CouchNet.HttpTransport.Impl
 
         public string GetHeader(string key)
         {
-            return Client.DefaultHeaders[key];
+            return Client.DefaultHeaders.ContainsKey(key) ? Client.DefaultHeaders[key] : string.Empty;
         }
 
         public void ClearHeaders()

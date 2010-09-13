@@ -1,4 +1,5 @@
 using CouchNet.HttpTransport;
+using Newtonsoft.Json;
 
 namespace CouchNet
 {

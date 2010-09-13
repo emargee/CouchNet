@@ -138,6 +138,22 @@ namespace CouchNet.Tests
             Assert.AreEqual("application/xml", ch.RequestEncoding);
         }
 
+        [Test]
+        public void Ctor_Login_SetsCredentials()
+        {
+            var ch = new CouchConnection("http://user:pass@localhost/");
+
+            Assert.AreEqual("Basic dXNlcjpwYXNz", ch.Transport.GetHeader("Authorization"));
+        }
+
+        [Test]
+        public void Ctor_Login_DiscardsWithoutPassword()
+        {
+            var ch = new CouchConnection("http://userpass@localhost/");
+
+            Assert.IsNullOrEmpty(ch.Transport.GetHeader("Authorization"));
+        }
+
         #endregion
 
         #region Header Manipulation

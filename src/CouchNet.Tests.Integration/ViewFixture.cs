@@ -14,7 +14,8 @@ namespace CouchNet.Tests.Integration
         public void KeyMatch_String()
         {
             var conn = new CouchConnection("http://localhost:5984/");
-            var db = new CouchDatabase(conn, "integrationtest");
+            var svc = new CouchService(conn);
+            var db = svc.Database("integrationtest");
 
             var query = new CouchViewQuery().Key("apple");
 
@@ -49,7 +50,8 @@ namespace CouchNet.Tests.Integration
         public void KeyMatch_String_LimitZero_ShouldReturnTotals()
         {
             var conn = new CouchConnection("http://localhost:5984/");
-            var db = new CouchDatabase(conn, "integrationtest");
+            var svc = new CouchService(conn);
+            var db = svc.Database("integrationtest");
 
             var query = new CouchViewQuery().Key("apple").Limit(0);
 
@@ -85,7 +87,8 @@ namespace CouchNet.Tests.Integration
         public void KeyMatch_Array()
         {
             var conn = new CouchConnection("http://localhost:5984/");
-            var db = new CouchDatabase(conn, "integrationtest");
+            var svc = new CouchService(conn);
+            var db = svc.Database("integrationtest");
 
             var query = new CouchViewQuery().Key(new[] { "apple", "orange" });
 
@@ -120,7 +123,8 @@ namespace CouchNet.Tests.Integration
         public void KeyMatch_Array_LimitZero_ShouldReturnTotals()
         {
             var conn = new CouchConnection("http://localhost:5984/");
-            var db = new CouchDatabase(conn, "integrationtest");
+            var svc = new CouchService(conn);
+            var db = svc.Database("integrationtest");
 
             var query = new CouchViewQuery().Key(new[] { "apple", "orange" }).Limit(0);
 
@@ -156,7 +160,8 @@ namespace CouchNet.Tests.Integration
         public void KeyMatch_Array_WildCardQuery()
         {
             var conn = new CouchConnection("http://localhost:5984/");
-            var db = new CouchDatabase(conn, "integrationtest");
+                        var svc = new CouchService(conn);
+            var db = svc.Database("integrationtest");
 
             var query = new CouchViewQuery().Key(new[] { "apple", "cats" }).EndKey(new[] { "apple", "*" });
 
@@ -191,7 +196,8 @@ namespace CouchNet.Tests.Integration
         public void TempView_CanSerialize()
         {
             var conn = new CouchConnection("http://localhost:5984/");
-            var db = new CouchDatabase(conn, "unittest");
+            var svc = new CouchService(conn);
+            var db = svc.Database("unittest");
             var temp = new CouchTempView { Map = "function(doc) {\n  emit(null, doc);\n}" };
             var results = db.ExecuteTempView<BusinessCard>(temp, new CouchViewQuery());
 
@@ -219,7 +225,8 @@ namespace CouchNet.Tests.Integration
         public void Show_CanExecuteCorrectly()
         {
             var conn = new CouchConnection("http://localhost:5984/");
-            var db = new CouchDatabase(conn, "unittest");
+            var svc = new CouchService(conn);
+            var db = svc.Database("unittest");
 
             var result = db.DesignDocument("example").ExecuteShow("test");
             Debug.WriteLine(result.Output);
@@ -235,7 +242,8 @@ namespace CouchNet.Tests.Integration
         public void List_CanExecuteCorrectly()
         {
             var conn = new CouchConnection("http://localhost:5984/");
-            var db = new CouchDatabase(conn, "unittest");
+            var svc = new CouchService(conn);
+            var db = svc.Database("unittest");
 
             var result = db.DesignDocument("example").ExecuteList("htmlList", "test", new CouchViewQuery());
 
@@ -251,7 +259,9 @@ namespace CouchNet.Tests.Integration
         public void NewSyntax()
         {
             var conn = new CouchConnection("http://localhost:5984/");
-            var db = new CouchDatabase(conn, "unittest");
+            var svc = new CouchService(conn);
+            var db = svc.Database("unittest");
+
             var doc = db.DesignDocument("example");
 
             //-[ View Execution ]---------------------------------------------

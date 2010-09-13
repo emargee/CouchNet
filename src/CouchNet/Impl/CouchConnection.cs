@@ -50,6 +50,18 @@ namespace CouchNet.Impl
             Transport = factory.Create(BaseAddress);
             Cache = new NullCache();
             EnableCache();
+
+            if (string.IsNullOrEmpty(uri.UserInfo)) return;
+
+            if(uri.UserInfo.Contains(":"))
+            {
+                var up = uri.UserInfo.Split(new []{':'},StringSplitOptions.RemoveEmptyEntries);
+
+                if(up.Length == 2)
+                {
+                    SetCredentials(up[0],up[1]);    
+                }
+            }
         }
 
         #endregion

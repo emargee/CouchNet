@@ -25,9 +25,7 @@ namespace CouchNet
         public int WaitingClients { get; private set; }
         public bool WaitingCommit { get; private set; } 
 
-        private readonly JsonSerializerSettings _settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-
-        internal CouchDesignDocumentInfoResponse(IHttpResponse rawResponse)
+        internal CouchDesignDocumentInfoResponse(IHttpResponse rawResponse, JsonSerializerSettings settings)
         {
             if (rawResponse.StatusCode != HttpStatusCode.OK && rawResponse.StatusCode != HttpStatusCode.NotModified)
             {
@@ -43,7 +41,7 @@ namespace CouchNet
 
             try
             {
-                var info = JsonConvert.DeserializeObject<CouchDesignDocumentInfoDefinition>(rawResponse.Data, _settings);
+                var info = JsonConvert.DeserializeObject<CouchDesignDocumentInfoDefinition>(rawResponse.Data, settings);
 
                 Id = info.Name;
                 Revision = "";

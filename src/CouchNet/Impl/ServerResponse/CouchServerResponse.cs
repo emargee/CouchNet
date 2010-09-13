@@ -15,8 +15,6 @@ namespace CouchNet.Impl.ServerResponse
         public string ErrorType { get; private set; }
         public string ErrorMessage { get; private set; }
 
-        private readonly JsonSerializerSettings _settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-
         internal CouchServerResponse(bool isOk)
         {
             IsOk = isOk;
@@ -26,7 +24,7 @@ namespace CouchNet.Impl.ServerResponse
         {
             try
             {
-                var resp = JsonConvert.DeserializeObject<CouchServerResponseDefinition>(response.Data, _settings);
+                var resp = JsonConvert.DeserializeObject<CouchServerResponseDefinition>(response.Data, CouchService.JsonSettings);
 
                 Id = resp.Id;
                 Revision = resp.Revision;

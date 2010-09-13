@@ -37,11 +37,9 @@ namespace CouchNet.Impl.ServerResponse
         
         public int DiskFormatVersion { get; set; }
 
-        private readonly JsonSerializerSettings _settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-
         public CouchDatabaseStatusResponse() { }
 
-        internal CouchDatabaseStatusResponse(IHttpResponse rawResponse)
+        internal CouchDatabaseStatusResponse(IHttpResponse rawResponse, JsonSerializerSettings settings)
         {
             if (rawResponse.StatusCode != HttpStatusCode.OK && rawResponse.StatusCode != HttpStatusCode.NotModified)
             {
@@ -57,7 +55,7 @@ namespace CouchNet.Impl.ServerResponse
 
             try
             {
-                var status = JsonConvert.DeserializeObject<CouchDatabaseStatusDefinition>(rawResponse.Data, _settings);
+                var status = JsonConvert.DeserializeObject<CouchDatabaseStatusDefinition>(rawResponse.Data, settings);
 
                 Id = rawResponse.ETag;
                 Revision = rawResponse.ETag;

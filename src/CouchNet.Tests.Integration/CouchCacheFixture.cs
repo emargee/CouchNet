@@ -69,7 +69,8 @@ namespace CouchNet.Tests.Integration
             var cache = new HttpRuntimeCache { ExpirationWindow = 5 };
             conn.Cache = cache;
 
-            var db = new CouchDatabase(conn, "integrationtest");
+            var svc = new CouchService(conn);
+            var db = svc.Database("integrationtest");
 
             var resp = db.Get<BusinessCard>("d1d2bac2b4e65baf10be20bf08000189");
             Debug.WriteLine("Name : " + resp.Name);

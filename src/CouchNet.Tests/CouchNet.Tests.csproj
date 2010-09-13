@@ -75,6 +75,7 @@
     <Compile Include="CouchDatabaseFixture.cs" />
     <Compile Include="CouchDesignDocumentFixture.cs" />
     <Compile Include="CouchHandlerFixture.cs" />
+    <Compile Include="CouchServiceFixture.cs" />
     <Compile Include="CouchViewQueryFixture.cs" />
     <Compile Include="Model\BadJsonPropertyClass.cs" />
     <Compile Include="Model\ExampleEntity.cs" />

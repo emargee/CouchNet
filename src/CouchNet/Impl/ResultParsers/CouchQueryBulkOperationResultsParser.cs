@@ -11,13 +11,12 @@ namespace CouchNet.Impl.ResultParsers
 {
     public class CouchQueryBulkOperationResultsParser : ICouchQueryResultsParser<ICouchServerResponse>
     {
-        private readonly JsonSerializerSettings _settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-
         public ICouchQueryResults<ICouchServerResponse> Parse(IHttpResponse rawResponse)
         {
             var results = new CouchQueryResults<ICouchServerResponse>();
+            var settings = CouchService.JsonSettings;
 
-            var cdbResults = JsonConvert.DeserializeObject<IEnumerable<CouchServerResponseDefinition>>(rawResponse.Data, _settings);
+            var cdbResults = JsonConvert.DeserializeObject<IEnumerable<CouchServerResponseDefinition>>(rawResponse.Data, settings);
 
             foreach (var result in cdbResults)
             {

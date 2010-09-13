@@ -16,7 +16,8 @@ namespace CouchNet.Tests.Integration
         public void QuickTest()
         {
             var conn = new CouchConnection("http://localhost", 5984);
-            var db = new CouchDatabase(conn, "unittest");
+            var svc = new CouchService(conn);
+            var db = svc.Database("unittest");
 
             // -- ADDING FROM NEW --- 
 
@@ -60,7 +61,15 @@ namespace CouchNet.Tests.Integration
         public void ViewSyntaxCheck()
         {
             var conn = new CouchConnection("http://www.couchdbtest.com", 5984);
-            var db = new CouchDatabase(conn, "unittest");
+
+            var ex = new BusinessCard();
+
+            var svc = new CouchService(conn);
+            var db2 = svc.Database("unittest");
+            var doc = db2.DesignDocument("monkeytennis");
+
+            svc.Database("unittest").DesignDocument("monkeyTennis").View("test").Execute<BusinessCard>(new CouchViewQuery());
+            svc.Database("unittest").DesignDocument("monkeyTennis").Show("test").Execute("1234");
 
             //var show = db.DesignDocument("example").Show("test");
 
@@ -136,7 +145,9 @@ namespace CouchNet.Tests.Integration
         public void JsonTest()
         {
             var conn = new CouchConnection("http://localhost", 5984);
-            var db = new CouchDatabase(conn, "unittest");
+
+            var svc = new CouchService(conn);
+            var db = svc.Database("unittest");
 
             //var view = db.DesignDocument("example").View("test");
 

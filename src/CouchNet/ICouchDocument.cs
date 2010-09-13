@@ -4,6 +4,6 @@ namespace CouchNet
     {
         string Id { get; set; }
         string Revision { get; }
-        bool? IsDeleted { get; }
+        //bool? IsDeleted { get; }
     }
 }

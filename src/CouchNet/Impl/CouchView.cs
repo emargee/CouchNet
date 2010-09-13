@@ -7,20 +7,19 @@ namespace CouchNet.Impl
 {
     public class CouchView : ICouchView
     {
-        private readonly JsonSerializerSettings _settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, MissingMemberHandling = MissingMemberHandling.Ignore };
-
-        private string DesignDocument { get; set; }
-        public string Name { get; internal set; }        
+        internal readonly CouchDesignDocument DesignDocument;
+        public readonly string Name;        
 
         public string Map { get; set; }
         public string Reduce { get; set; }
 
-        public CouchView(string viewName)
+        public CouchView(string viewName, CouchDesignDocument designDocument)
         {
             Name = viewName;
+            DesignDocument = designDocument;
         }
         
-        internal CouchView(string designDocument, KeyValuePair<string, CouchViewDefinition> viewDefinition)
+        internal CouchView(KeyValuePair<string, CouchViewDefinition> viewDefinition, CouchDesignDocument designDocument)
         {
             DesignDocument = designDocument;
             Name = viewDefinition.Key;
@@ -30,7 +29,7 @@ namespace CouchNet.Impl
 
         public override string ToString()
         {
-            return string.Format("_design/{0}/_view/{1}", DesignDocument, Name);
+            return string.Format("{0}/_view/{1}", DesignDocument, Name);
         }
     }
 }

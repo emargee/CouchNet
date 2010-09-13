@@ -1,5 +1,7 @@
+using System.Collections.Specialized;
 using CouchNet.Enums;
 using CouchNet.Impl;
+using CouchNet.Impl.ServerResponse;
 
 namespace CouchNet
 {
@@ -62,6 +64,26 @@ namespace CouchNet
         {
             query.Skip = skip;
             return query;
+        }
+
+        public static ICouchQueryResults<T> Execute<T>(this CouchView view, CouchViewQuery query) where T : ICouchDocument
+        {
+            return view.DesignDocument.ExecuteView<T>(view, query);
+        }
+
+        public static CouchHandlerResponse Execute(this CouchShowHandler handler, string documentId)
+        {
+            return handler.DesignDocument.ExecuteShow(handler, documentId, new NameValueCollection());
+        }
+
+        public static CouchHandlerResponse Execute(this CouchShowHandler handler, NameValueCollection queryString)
+        {
+            return handler.DesignDocument.ExecuteShow(handler, null, queryString);
+        }
+
+        public static CouchHandlerResponse Execute(this CouchShowHandler handler, string documentId, NameValueCollection queryString)
+        {
+            return handler.DesignDocument.ExecuteShow(handler, documentId, queryString);
         }
     }
 }

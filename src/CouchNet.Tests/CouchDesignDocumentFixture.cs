@@ -31,9 +31,12 @@ namespace CouchNet.Tests
         {
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             _connectionMock.Setup(x => x.Get("unittest/_design/example/_view/testView?key=%22apple%22")).Returns(_viewEmptyResults.Object);
+            //                           Get("unittest/_design/_design/example/_view/testView?key=%22apple%22")
             _connectionMock.Setup(x => x.Get("unittest/_design/example")).Returns(_viewDefinition.Object);
 
-            var db = new CouchDatabase(_connectionMock.Object, "unittest");
+            var svc = new CouchService(_connectionMock.Object);
+
+            var db = svc.Database("unittest");
 
             var query = new CouchViewQuery().Key("apple");
 

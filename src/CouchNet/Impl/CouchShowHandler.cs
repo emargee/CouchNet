@@ -4,11 +4,17 @@ namespace CouchNet.Impl
 {
     public class CouchShowHandler : ICouchHandler
     {
-        public string DesignDocument { get; private set; }
-        public string Name { get; set; }
+        internal readonly CouchDesignDocument DesignDocument;
+        public readonly string Name;
         public object Function { get; set; }
 
-        internal CouchShowHandler(string designDocument, KeyValuePair<string, string> showDefinition)
+        public CouchShowHandler(string viewName, CouchDesignDocument designDocument)
+        {
+            Name = viewName;
+            DesignDocument = designDocument;
+        }
+
+        internal CouchShowHandler(KeyValuePair<string, string> showDefinition, CouchDesignDocument designDocument)
         {
             DesignDocument = designDocument;
             Name = showDefinition.Key;

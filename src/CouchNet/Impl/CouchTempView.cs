@@ -5,9 +5,6 @@ namespace CouchNet.Impl
 {
     public class CouchTempView : ICouchView
     {
-        private readonly JsonSerializerSettings _settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, MissingMemberHandling = MissingMemberHandling.Ignore };
-
-        public string DesignDocument { get; internal set; }
         public string Name { get; internal set; }
 
         public string Map { get; set; }
@@ -17,7 +14,6 @@ namespace CouchNet.Impl
 
         public CouchTempView()
         {
-            DesignDocument = string.Empty;
             Name = "_temp_view";
             Langauge = "javascript";
         }
@@ -30,7 +26,7 @@ namespace CouchNet.Impl
         public string ToJson()
         {
             var temp = new CouchTempViewDefinition { Language = Langauge, Map = Map, Reduce = Reduce };
-            return JsonConvert.SerializeObject(temp, Formatting.None, _settings);
+            return JsonConvert.SerializeObject(temp, Formatting.None, CouchService.JsonSettings);
         }
     }
 }

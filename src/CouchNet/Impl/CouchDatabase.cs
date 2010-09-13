@@ -32,13 +32,11 @@ namespace CouchNet.Impl
     {
         #region Private Instance Fields
 
-        private readonly ICouchConnection _connection;
-
-        private readonly JsonSerializerSettings _settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+        internal readonly CouchService Service;
 
         internal IHttpResponse RawResponse { get; set; }
 
-        internal List<CouchDesignDocument> DesignDocuments;
+        internal IList<CouchDesignDocument> DesignDocuments;
 
         #endregion
 
@@ -65,14 +63,14 @@ namespace CouchNet.Impl
 
         #region ctor
 
-        public CouchDatabase(ICouchConnection connection, string databaseName)
+        public CouchDatabase(string databaseName, CouchService service)
         {
-            if (connection == null || string.IsNullOrEmpty(databaseName))
+            if (service == null || string.IsNullOrEmpty(databaseName))
             {
                 throw new ArgumentNullException();
             }
 
-            _connection = connection;
+            Service = service;
 
             databaseName = databaseName.ToLower();
 
@@ -147,7 +145,7 @@ namespace CouchNet.Impl
 
             var path = string.Format("{0}/_all_docs{1}", Name, query);
 
-            RawResponse = _connection.Post(path, JsonConvert.SerializeObject(new { keys = ids }));
+            RawResponse = Service.Connection.Post(path, JsonConvert.SerializeObject(new { keys = ids }));
 
             var results = new CouchQueryAllDocumentsResultsParser<T>().Parse(RawResponse);
 
@@ -157,7 +155,7 @@ namespace CouchNet.Impl
         public ICouchQueryResults<CouchDocument> GetMany(IEnumerable<string> ids)
         {
             var path = string.Format("{0}/_all_docs", Name);
-            RawResponse = _connection.Post(path, JsonConvert.SerializeObject(new { keys = ids }));
+            RawResponse = Service.Connection.Post(path, JsonConvert.SerializeObject(new { keys = ids }));
 
             var results = new CouchQueryGeneralResultsParser().Parse(RawResponse);
 
@@ -178,7 +176,7 @@ namespace CouchNet.Impl
                 path = path + query;
             }
 
-            RawResponse = _connection.Get(path);
+            RawResponse = Service.Connection.Get(path);
 
             var results = new CouchQueryGeneralResultsParser().Parse(RawResponse);
 
@@ -196,7 +194,7 @@ namespace CouchNet.Impl
 
             var path = string.Format("{0}/_all_docs{1}", Name, query);
 
-            RawResponse = _connection.Get(path);
+            RawResponse = Service.Connection.Get(path);
 
             var results = new CouchQueryAllDocumentsResultsParser<T>().Parse(RawResponse);
 
@@ -223,7 +221,7 @@ namespace CouchNet.Impl
                 bulk.AllOrNothing = true;
             }
 
-            RawResponse = _connection.Post(path, JsonConvert.SerializeObject(bulk, Formatting.None, _settings));
+            RawResponse = Service.Connection.Post(path, JsonConvert.SerializeObject(bulk, Formatting.None, CouchService.JsonSettings));
 
             var results = new CouchQueryBulkOperationResultsParser().Parse(RawResponse);
 
@@ -257,7 +255,7 @@ namespace CouchNet.Impl
                 bulk.AllOrNothing = true;
             }
 
-            RawResponse = _connection.Post(path, JsonConvert.SerializeObject(bulk, Formatting.None, _settings));
+            RawResponse = Service.Connection.Post(path, JsonConvert.SerializeObject(bulk, Formatting.None, CouchService.JsonSettings));
 
             var results = new CouchQueryBulkOperationResultsParser().Parse(RawResponse);
 
@@ -274,7 +272,7 @@ namespace CouchNet.Impl
             var qs = new QueryString().Add("rev", revision);
 
             var path = string.Format("{0}/{1}{2}", Name, id, qs);
-            RawResponse = _connection.Delete(path);
+            RawResponse = Service.Connection.Delete(path);
 
             return new CouchServerResponse(RawResponse);
         }
@@ -294,7 +292,7 @@ namespace CouchNet.Impl
             var qs = new QueryString().Add("rev", document.Revision);
 
             var path = string.Format("{0}/{1}{2}", Name, document.Id, qs);
-            RawResponse = _connection.Delete(path);
+            RawResponse = Service.Connection.Delete(path);
 
             return new CouchServerResponse(RawResponse);
         }
@@ -325,11 +323,11 @@ namespace CouchNet.Impl
 
             if (!string.IsNullOrEmpty(revision))
             {
-                RawResponse = _connection.Copy(path, toId + new QueryString().Add("rev", revision));
+                RawResponse = Service.Connection.Copy(path, toId + new QueryString().Add("rev", revision));
             }
             else
             {
-                RawResponse = _connection.Copy(path, toId);
+                RawResponse = Service.Connection.Copy(path, toId);
             }
 
             var status = new CouchServerResponse(RawResponse);
@@ -339,48 +337,46 @@ namespace CouchNet.Impl
 
         #endregion
 
-        #region Design Document / View Methods
+        #region Design Document
+
+        public CouchDesignDocument CreateDesignDocument(string name)
+        {
+            var doc = new CouchDesignDocument(name, this);
+            DesignDocuments.Add(doc);
+            return doc;
+        }
 
         public CouchDesignDocument DesignDocument(string name)
         {
-            return FetchDesignDocument(name);
+            var documentName = "_design/" + name;
+            var result = Get<CouchDesignDocumentDefinition>(documentName);
+
+            if (result == null)
+            {
+                throw new CouchNetDocumentNotFoundException(name);
+            }
+
+            return new CouchDesignDocument(result, this);
         }
 
-        public ICouchQueryResults<T> ExecuteView<T>(string designDocument, string viewName, CouchViewQuery query) where T : ICouchDocument
-        {
-            var doc = DesignDocument(designDocument);
+        #endregion
 
-            return doc.ExecuteView<T>(viewName, query);
-        }
-
-        public CouchHandlerResponse ExecuteShow(string designDocument, string showHandlerName, string documentId, NameValueCollection queryString)
-        {
-            var doc = DesignDocument(designDocument);
-
-            return doc.ExecuteShow(showHandlerName,documentId, queryString);
-        }
-
-        public CouchHandlerResponse ExecuteList(string designDocument, string listHandlerName, string viewName, CouchViewQuery query)
-        {
-            var doc = DesignDocument(designDocument);
-
-            return doc.ExecuteList(listHandlerName, viewName, query);
-        }
+        #region Temp View
 
         public ICouchQueryResults<T> ExecuteTempView<T>(CouchTempView view, CouchViewQuery query) where T : ICouchDocument
         {
-            if(string.IsNullOrEmpty(view.Map) && string.IsNullOrEmpty(view.Reduce))
+            if (string.IsNullOrEmpty(view.Map) && string.IsNullOrEmpty(view.Reduce))
             {
                 throw new ArgumentException("Please provide MAP or MAP & REDUCE functions.");
             }
 
-            if(string.IsNullOrEmpty(view.Map) && !string.IsNullOrEmpty(view.Reduce))
+            if (string.IsNullOrEmpty(view.Map) && !string.IsNullOrEmpty(view.Reduce))
             {
                 throw new ArgumentException("Cannot have a REDUCE function without a MAP function.");
             }
 
             var path = string.Format("{0}/{1}{2}", Name, view, query);
-            RawResponse = _connection.Post(path, view.ToJson(), "application/json");
+            RawResponse = Service.Connection.Post(path, view.ToJson(), "application/json");
 
             var results = new CouchQueryViewResultsParser<T>().Parse(RawResponse);
 
@@ -391,7 +387,7 @@ namespace CouchNet.Impl
 
         #region Other
 
-        public int Count()
+        public int DocumentCount()
         {
             var status = Status();
             return status.IsOk ? Status().DocumentCount : -1;
@@ -404,29 +400,9 @@ namespace CouchNet.Impl
         public CouchDatabaseStatusResponse Status()
         {
             var path = Name;
-            RawResponse = _connection.Get(path);
+            RawResponse = Service.Connection.Get(path);
 
-            return new CouchDatabaseStatusResponse(RawResponse);
-        }
-
-        #endregion
-
-        #region Database Utility Methods
-
-        public ICouchServerResponse BeginCompact()
-        {
-            var path = string.Format("{0}/_compact", Name);
-            var response = _connection.Post(path, null);
-
-            return new CouchServerResponse(response);
-        }
-
-        public ICouchServerResponse BeginViewCleanup()
-        {
-            var path = string.Format("{0}/_view_cleanup", Name);
-            var response = _connection.Post(path, null);
-
-            return new CouchServerResponse(response);
+            return new CouchDatabaseStatusResponse(RawResponse, CouchService.JsonSettings);
         }
 
         #endregion
@@ -449,7 +425,7 @@ namespace CouchNet.Impl
 
             try
             {
-                jsonString = JsonConvert.SerializeObject(document, Formatting.None, _settings);
+                jsonString = JsonConvert.SerializeObject(document, Formatting.None, CouchService.JsonSettings);
             }
 
             catch (JsonSerializationException ex)
@@ -459,7 +435,7 @@ namespace CouchNet.Impl
 
             var path = string.Format("{0}/{1}", Name, document.Id);
 
-            RawResponse = _connection.Put(path, jsonString);
+            RawResponse = Service.Connection.Put(path, jsonString);
 
             return new CouchServerResponse(RawResponse);
         }
@@ -468,7 +444,7 @@ namespace CouchNet.Impl
         {
             var path = string.Format("{0}/{1}{2}", Name, id, queryString);
 
-            RawResponse = _connection.Get(path);
+            RawResponse = Service.Connection.Get(path);
 
             if (RawResponse.StatusCode != HttpStatusCode.OK && RawResponse.StatusCode != HttpStatusCode.NotModified)
             {
@@ -481,7 +457,7 @@ namespace CouchNet.Impl
         private int GetRevisionsLimit()
         {
             var path = string.Format("{0}/{1}", Name, "_revs_limit");
-            RawResponse = _connection.Get(path);
+            RawResponse = Service.Connection.Get(path);
 
             if (RawResponse.StatusCode != HttpStatusCode.OK && RawResponse.StatusCode != HttpStatusCode.NotModified)
             {
@@ -501,20 +477,7 @@ namespace CouchNet.Impl
         private void SetRevisionsLimit(int limit)
         {
             var path = string.Format("{0}/{1}", Name, "_revs_limit");
-            RawResponse = _connection.Put(path, limit.ToString());
-        }
-
-        private CouchDesignDocument FetchDesignDocument(string documentName)
-        {
-            var name = "_design/" + documentName;
-            var result = Get<CouchDesignDocumentDefinition>(name);
-
-            if (result == null)
-            {
-                throw new CouchNetDocumentNotFoundException(name);
-            }
-
-            return new CouchDesignDocument(result, Name, _connection);
+            RawResponse = Service.Connection.Put(path, limit.ToString());
         }
 
         #endregion

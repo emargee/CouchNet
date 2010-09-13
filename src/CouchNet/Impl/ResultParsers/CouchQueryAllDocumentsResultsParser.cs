@@ -10,11 +10,10 @@ namespace CouchNet.Impl.ResultParsers
 {
     public class CouchQueryAllDocumentsResultsParser<T> : ICouchQueryResultsParser<T> where T : ICouchDocument
     {
-        private readonly JsonSerializerSettings _settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-
         public ICouchQueryResults<T> Parse(IHttpResponse rawResponse)
         {
             var results = new CouchQueryResults<T>();
+            var settings = CouchService.JsonSettings;
 
             if (rawResponse.StatusCode != HttpStatusCode.OK && rawResponse.StatusCode != HttpStatusCode.NotModified)
             {
@@ -26,7 +25,7 @@ namespace CouchNet.Impl.ResultParsers
                 return results;
             }
 
-            var cdbResult = JsonConvert.DeserializeObject<CouchViewResultsDefinition<CouchAllDocsResultRowDefinition<T>>>(rawResponse.Data, _settings);
+            var cdbResult = JsonConvert.DeserializeObject<CouchViewResultsDefinition<CouchAllDocsResultRowDefinition<T>>>(rawResponse.Data, settings);
 
             if (cdbResult != null && cdbResult.Rows.Count() >= 0)
             {
