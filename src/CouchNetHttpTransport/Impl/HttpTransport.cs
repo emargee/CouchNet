@@ -121,6 +121,12 @@ namespace CouchNet.HttpTransport.Impl
                         break;
                     }
 
+                case (HttpVerb.Head):
+                    {
+                        message = Client.Head(path);
+                        break;
+                    }
+
                 default:
                     {
                         throw new NotImplementedException("Unknown/Unsupported HTTP verb.");

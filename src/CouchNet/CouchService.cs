@@ -1,4 +1,6 @@
 using System;
+using System.Net;
+using CouchNet.Exceptions;
 using CouchNet.Impl;
 using CouchNet.Impl.ServerResponse;
 using Newtonsoft.Json;
@@ -34,6 +36,11 @@ namespace CouchNet
 
         public CouchDatabase Database(string name)
         {
+            if (Connection.Head(name).StatusCode != HttpStatusCode.OK && Connection.Head(name).StatusCode != HttpStatusCode.NotModified)
+            {
+                throw new CouchNetDocumentNotFoundException(name);    
+            }
+
             return new CouchDatabase(name, this);
         }
 

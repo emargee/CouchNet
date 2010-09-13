@@ -6,6 +6,7 @@ namespace CouchNet.HttpTransport
         Put,
         Post,
         Delete,
-        Copy
+        Copy,
+        Head
     }
 }

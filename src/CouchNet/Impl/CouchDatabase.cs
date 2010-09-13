@@ -335,6 +335,27 @@ namespace CouchNet.Impl
             return status;
         }
 
+        public bool Exists(ICouchDocument document)
+        {
+            if(document == null)
+            {
+                return false;
+            }
+
+            if(string.IsNullOrEmpty(document.Id))
+            {
+                return false;
+            }
+
+            return Exists(document.Id);
+        }
+
+        public bool Exists(string id)
+        {
+            var path = string.Format("{0}/{1}", Name, id);
+            return Service.Connection.Head(path).StatusCode == HttpStatusCode.OK || Service.Connection.Head(path).StatusCode == HttpStatusCode.NotModified;
+        }
+
         #endregion
 
         #region Design Document

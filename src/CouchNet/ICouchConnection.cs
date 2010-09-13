@@ -16,5 +16,6 @@ namespace CouchNet
         IHttpResponse Delete(string path, string encoding);
         IHttpResponse Copy(string fromPath, string newDocId);
         IHttpResponse Copy(string fromPath, string newDocId, string encoding);
+        IHttpResponse Head(string path);
     }
 }

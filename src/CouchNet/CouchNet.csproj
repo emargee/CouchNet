@@ -65,6 +65,7 @@
   <ItemGroup>
     <Compile Include="CouchDocumentProperties.cs" />
     <Compile Include="CouchDocumentSimple.cs" />
+    <Compile Include="Exceptions\CouchNetDatabaseNotFoundException.cs" />
     <Compile Include="Impl\ServerResponse\CouchDesignDocumentInfoResponse.cs" />
     <Compile Include="Enums\CouchBulkUpdateBehaviour.cs" />
     <Compile Include="Enums\CouchDocumentOptions.cs" />

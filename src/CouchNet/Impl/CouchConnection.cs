@@ -138,6 +138,11 @@ namespace CouchNet.Impl
             return Transport.Send(fromPath, HttpVerb.Copy, newDocId, encoding);
         }
 
+        public IHttpResponse Head(string path)
+        {
+            return Transport.Send(path, HttpVerb.Head, null, null);
+        }
+
         #endregion
 
         #region Headers
