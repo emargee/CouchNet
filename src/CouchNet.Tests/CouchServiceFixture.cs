@@ -51,15 +51,15 @@ namespace CouchNet.Tests
         }
 
 
-        [Test]
-        public void Compact_MissingDb_Throws()
-        {
-            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
-            _connectionMock.Setup(s => s.Post("unittest/_compact", null)).Returns(_errorMissingResponse.Object);
+        //[Test]
+        //public void Compact_MissingDb_Throws()
+        //{
+        //    _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+        //    _connectionMock.Setup(s => s.Post("unittest/_compact", null)).Returns(_errorMissingResponse.Object);
 
-            var svc = new CouchService(_connectionMock.Object);
-            Assert.Throws<ArgumentNullException>(() => svc.BeginDatabaseCompact(svc.Database("unittest")));
-        }
+        //    var svc = new CouchService(_connectionMock.Object);
+        //    Assert.Throws<ArgumentNullException>(() => svc.BeginDatabaseCompact(svc.Database("unittest")));
+        //}
 
         //[Test]
         //public void ViewCleanup_Begin_Return()

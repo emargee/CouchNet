@@ -65,12 +65,13 @@
   <ItemGroup>
     <Compile Include="CouchDocumentProperties.cs" />
     <Compile Include="CouchDocumentSimple.cs" />
-    <Compile Include="Exceptions\CouchNetDatabaseNotFoundException.cs" />
+    <Compile Include="Exceptions\CouchDatabaseNotFoundException.cs" />
+    <Compile Include="Impl\CouchDocumentUpdateHandler.cs" />
     <Compile Include="Impl\ServerResponse\CouchDesignDocumentInfoResponse.cs" />
     <Compile Include="Enums\CouchBulkUpdateBehaviour.cs" />
     <Compile Include="Enums\CouchDocumentOptions.cs" />
     <Compile Include="Enums\CouchDocumentRevisionStatus.cs" />
-    <Compile Include="Exceptions\CouchNetDocumentNotFoundException.cs" />
+    <Compile Include="Exceptions\CouchDocumentNotFoundException.cs" />
     <Compile Include="Extensions\Extensions.cs" />
     <Compile Include="ICouchCache.cs" />
     <Compile Include="ICouchConnection.cs" />
@@ -117,9 +118,11 @@
     <Compile Include="CouchService.cs" />
     <Compile Include="Impl\CouchView.cs" />
     <Compile Include="CouchViewQuery.cs" />
+    <Compile Include="ITrackChanges.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\QueryString.cs" />
     <Compile Include="Utils\StringEnum.cs" />
+    <Compile Include="Utils\Tools.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

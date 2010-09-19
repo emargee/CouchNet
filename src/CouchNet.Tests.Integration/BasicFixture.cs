@@ -68,8 +68,10 @@ namespace CouchNet.Tests.Integration
             var db2 = svc.Database("unittest");
             var doc = db2.DesignDocument("monkeytennis");
 
-            svc.Database("unittest").DesignDocument("monkeyTennis").View("test").Execute<BusinessCard>(new CouchViewQuery());
-            svc.Database("unittest").DesignDocument("monkeyTennis").Show("test").Execute("1234");
+            svc.Database("unittest").DesignDocument("monkeyTennis").Views["test"].Execute<BusinessCard>(new CouchViewQuery());
+            svc.Database("unittest").DesignDocument("monkeyTennis").Shows["test"].Execute("1234");
+
+            svc.Database("unittest").DesignDocument("monkeyTennis");
 
             //var show = db.DesignDocument("example").Show("test");
 
@@ -118,6 +120,8 @@ namespace CouchNet.Tests.Integration
         [Test]
         public void ExampleSyntax()
         {
+            var svc = new CouchService("http://localhost:5984");
+
             //var conn = new CouchConnection("http://localhost", 5984);
             //var db = new CouchDatabase(conn, "unittest");
 

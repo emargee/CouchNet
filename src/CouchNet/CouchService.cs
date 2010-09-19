@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using CouchNet.Enums;
 using CouchNet.Exceptions;
 using CouchNet.Impl;
 using CouchNet.Impl.ServerResponse;
@@ -12,6 +13,8 @@ namespace CouchNet
         internal ICouchConnection Connection { get; set; }
 
         internal static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, MissingMemberHandling = MissingMemberHandling.Ignore };
+
+        public bool EnableValidation { get; set; }
 
         #region ctor
 
@@ -36,18 +39,25 @@ namespace CouchNet
 
         public CouchDatabase Database(string name)
         {
-            if (Connection.Head(name).StatusCode != HttpStatusCode.OK && Connection.Head(name).StatusCode != HttpStatusCode.NotModified)
+            if (EnableValidation)
             {
-                throw new CouchNetDocumentNotFoundException(name);    
+                var head = Connection.Head(name).StatusCode;
+
+                if (head != HttpStatusCode.OK && head != HttpStatusCode.NotModified)
+                {
+                    throw new CouchDocumentNotFoundException(name);
+                }
             }
 
             return new CouchDatabase(name, this);
         }
 
-        //public CouchDatabaseStatusResponse DatabaseStatus(string databaseName)
-        //{
-        //    return new CouchDatabase(databaseName, Connection).Status();
-        //}
+        private bool DatabaseExists(CouchDatabase database)
+        {
+            var head = Connection.Head(database.Name).StatusCode;
+
+            return head == HttpStatusCode.OK || head == HttpStatusCode.NotModified;
+        }
 
         #endregion
 
@@ -98,6 +108,16 @@ namespace CouchNet
                 throw new ArgumentNullException("designDocument");
             }
 
+            if (EnableValidation)
+            {
+                var head = Connection.Head(designDocument.Database.Name + "/" + designDocument.Id).StatusCode;
+
+                if (head != HttpStatusCode.OK && head != HttpStatusCode.NotModified)
+                {
+                    throw new CouchDocumentNotFoundException(designDocument.Name);
+                }
+            }
+
             var path = string.Format("{0}/_compact/{1}", designDocument.Database.Name, designDocument.Id);
             var response = Connection.Post(path, null);
 
@@ -109,6 +129,14 @@ namespace CouchNet
             if(database == null)
             {
                 throw new ArgumentNullException("database");
+            }
+
+            if (EnableValidation)
+            {
+                if (!DatabaseExists(database))
+                {
+                    throw new CouchDatabaseNotFoundException(database.Name);
+                }
             }
 
             var path = string.Format("{0}/_compact", database.Name);
@@ -124,6 +152,14 @@ namespace CouchNet
                 throw new ArgumentNullException("database");
             }
 
+            if (EnableValidation)
+            {
+                if(!DatabaseExists(database))
+                {
+                    throw new CouchDatabaseNotFoundException(database.Name);
+                }
+            }
+
             var path = string.Format("{0}/_view_cleanup", database.Name);
             var response = Connection.Post(path, null);
 
@@ -136,6 +172,21 @@ namespace CouchNet
 
         public CouchDesignDocumentInfoResponse DesignDocumentInfo(CouchDesignDocument designDocument)
         {
+            if (designDocument == null)
+            {
+                throw new ArgumentNullException("designDocument");
+            }
+
+            if (EnableValidation)
+            {
+                var head = Connection.Head(designDocument.Database.Name + "/" + designDocument.Id).StatusCode;
+
+                if (head != HttpStatusCode.OK && head != HttpStatusCode.NotModified)
+                {
+                    throw new CouchDocumentNotFoundException(designDocument.Name);
+                }
+            }
+
             var path = string.Format("{0}/{1}/_info", designDocument.Database.Name, designDocument.Id);
 
             var rawResponse = Connection.Get(path);

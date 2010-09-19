@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace CouchNet.Impl
 {
-    public class CouchShowHandler : ICouchHandler, ITrackChanges
+    public class CouchDocumentUpdateHandler : ICouchHandler, ITrackChanges
     {
         internal readonly CouchDesignDocument DesignDocument;
         public readonly string Name;
@@ -10,24 +10,24 @@ namespace CouchNet.Impl
 
         public bool HasPendingChanges { get; private set; }
 
-        public CouchShowHandler(string viewName, CouchDesignDocument designDocument)
+        public CouchDocumentUpdateHandler(string viewName, CouchDesignDocument designDocument)
         {
             Name = viewName;
             DesignDocument = designDocument;
             HasPendingChanges = false;
         }
 
-        internal CouchShowHandler(KeyValuePair<string, string> showDefinition, CouchDesignDocument designDocument)
+        internal CouchDocumentUpdateHandler(KeyValuePair<string, string> updateDefinition, CouchDesignDocument designDocument)
         {
             DesignDocument = designDocument;
-            Name = showDefinition.Key;
-            Function = showDefinition.Value;
+            Name = updateDefinition.Key;
+            Function = updateDefinition.Value;
             HasPendingChanges = true;
         }
 
         public override string ToString()
         {
-            return string.Format("_design/{0}/_show/{1}", DesignDocument, Name);    
-        }
+            return string.Format("_design/{0}/_update/{1}", DesignDocument, Name);    
+        }    
     }
 }

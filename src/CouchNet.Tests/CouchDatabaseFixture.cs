@@ -338,16 +338,14 @@ namespace CouchNet.Tests
         }
 
         [Test]
-        public void Get_NotFound_ShouldBeNull()
+        public void Get_NotFound_ShouldThrow()
         {
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             _connectionMock.Setup(s => s.Get("unittest/abc123")).Returns(_notFoundResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
             var db = svc.Database("unittest");
-            var result = db.Get<ExampleEntity>("abc123");
-
-            Assert.IsNull(result);
+            Assert.Throws<CouchDocumentNotFoundException>(() => db.Get<ExampleEntity>("abc123"));
         }
 
         [Test]
@@ -1138,7 +1136,7 @@ namespace CouchNet.Tests
             Assert.AreEqual("javascript", doc.Language);
             Assert.AreEqual("_design/example", doc.Id);
             Assert.AreEqual("example",doc.Name);
-            Assert.AreEqual(1, doc.ViewCount);
+            Assert.AreEqual(1, doc.Views.Count);
         }
 
         [Test]
@@ -1149,7 +1147,7 @@ namespace CouchNet.Tests
             var svc = new CouchService(_connectionMock.Object);
             var db = svc.Database("unittest");
 
-            Assert.Throws<CouchNetDocumentNotFoundException>(() => db.DesignDocument("example"));
+            Assert.Throws<CouchDocumentNotFoundException>(() => db.DesignDocument("example"));
         }
 
         #endregion
@@ -1238,7 +1236,7 @@ namespace CouchNet.Tests
 
         //    var query = new CouchViewQuery().Key("089b887ff7b04a5bb31b68695f5cff01");
 
-        //    Assert.Throws<CouchNetDocumentNotFoundException>(
+        //    Assert.Throws<CouchDocumentNotFoundException>(
         //        () => db.ExecuteView<ExampleEntity>("badgers", "test", query));
         //}
 
@@ -1252,7 +1250,7 @@ namespace CouchNet.Tests
 
         //    var query = new CouchViewQuery().Key("089b887ff7b04a5bb31b68695f5cff01");
 
-        //    Assert.Throws<CouchNetDocumentNotFoundException>(() => db.ExecuteView<ExampleEntity>("example", "squirrels", query));
+        //    Assert.Throws<CouchDocumentNotFoundException>(() => db.ExecuteView<ExampleEntity>("example", "squirrels", query));
         //}
 
         //[Test]
@@ -1263,7 +1261,7 @@ namespace CouchNet.Tests
 
         //    var db = new CouchDatabase("unittest", _connectionMock.Object);
 
-        //    Assert.Throws<CouchNetDocumentNotFoundException>(() => db.ExecuteShow("example", "test", "089b887ff7b04a5bb31b68695f5cff01",new NameValueCollection()));
+        //    Assert.Throws<CouchDocumentNotFoundException>(() => db.ExecuteShow("example", "test", "089b887ff7b04a5bb31b68695f5cff01",new NameValueCollection()));
         //}
 
         //[Test]
@@ -1276,7 +1274,7 @@ namespace CouchNet.Tests
 
         //    var query = new CouchViewQuery().Key("089b887ff7b04a5bb31b68695f5cff01");
 
-        //    Assert.Throws<CouchNetDocumentNotFoundException>(() => db.ExecuteList("example", "test", "test", query));
+        //    Assert.Throws<CouchDocumentNotFoundException>(() => db.ExecuteList("example", "test", "test", query));
         //}
 
         //[Test]
@@ -1289,7 +1287,7 @@ namespace CouchNet.Tests
 
         //    var query = new CouchViewQuery().Key("089b887ff7b04a5bb31b68695f5cff01");
 
-        //    Assert.Throws<CouchNetDocumentNotFoundException>(() => db.ExecuteList("example", "test", "test", query));
+        //    Assert.Throws<CouchDocumentNotFoundException>(() => db.ExecuteList("example", "test", "test", query));
         //}
 
         //[Test]
@@ -1302,7 +1300,7 @@ namespace CouchNet.Tests
 
         //    var query = new CouchViewQuery().Key("089b887ff7b04a5bb31b68695f5cff01");
 
-        //    Assert.Throws<CouchNetDocumentNotFoundException>(() => db.ExecuteList("example", "htmlList", "testy", query));
+        //    Assert.Throws<CouchDocumentNotFoundException>(() => db.ExecuteList("example", "htmlList", "testy", query));
         //}
 
         //[Test]

@@ -342,12 +342,7 @@ namespace CouchNet.Impl
                 return false;
             }
 
-            if(string.IsNullOrEmpty(document.Id))
-            {
-                return false;
-            }
-
-            return Exists(document.Id);
+            return !string.IsNullOrEmpty(document.Id) && Exists(document.Id);
         }
 
         public bool Exists(string id)
@@ -370,11 +365,12 @@ namespace CouchNet.Impl
         public CouchDesignDocument DesignDocument(string name)
         {
             var documentName = "_design/" + name;
+
             var result = Get<CouchDesignDocumentDefinition>(documentName);
 
             if (result == null)
             {
-                throw new CouchNetDocumentNotFoundException(name);
+                throw new CouchDocumentNotFoundException(name);
             }
 
             return new CouchDesignDocument(result, this);
@@ -463,13 +459,31 @@ namespace CouchNet.Impl
 
         private T Get<T>(string id, QueryString queryString) where T : ICouchDocument
         {
+            if(string.IsNullOrEmpty(id))
+            {
+                throw new ArgumentNullException(id);
+            }
+
+            if(queryString == null)
+            {
+                queryString = new QueryString();
+            }
+
+            if (Service.EnableValidation)
+            {
+                if(!Exists(id))
+                {
+                    throw new CouchDocumentNotFoundException(id);
+                }
+            }
+
             var path = string.Format("{0}/{1}{2}", Name, id, queryString);
 
             RawResponse = Service.Connection.Get(path);
 
             if (RawResponse.StatusCode != HttpStatusCode.OK && RawResponse.StatusCode != HttpStatusCode.NotModified)
             {
-                return default(T);
+                throw new CouchDocumentNotFoundException(id);
             }
 
             return JsonConvert.DeserializeObject<T>(RawResponse.Data);

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 
-using CouchNet.Exceptions;
 using CouchNet.Impl.ResultParsers;
 using CouchNet.Impl.ServerResponse;
 using CouchNet.Internal;
@@ -11,7 +10,7 @@ using CouchNet.Utils;
 
 namespace CouchNet.Impl
 {
-    public class CouchDesignDocument : ICouchDocument
+    public class CouchDesignDocument : ICouchDocument, ITrackChanges
     {
         internal readonly CouchDatabase Database;
 
@@ -21,25 +20,12 @@ namespace CouchNet.Impl
         public readonly string Name;
         public string Language { get; set; }
 
-        public int ViewCount
-        {
-            get { return Views.Count; }
-        }
+        public bool HasPendingChanges { get; set; }
 
-        public int ShowCount
-        {
-            get { return Shows.Count; }
-        }
-
-        public int ListCount
-        {
-            get { return Lists.Count; }
-        }
-
-        private bool HasPendingChanges { get; set; }
-        private Dictionary<string,CouchViewDefinition> Views { get; set; }
-        private Dictionary<string, string> Shows { get; set; }
-        private Dictionary<string, string> Lists { get; set; }
+        public IDictionary<string,CouchView> Views { get; set; }
+        public IDictionary<string,CouchShowHandler> Shows { get; set; }
+        public IDictionary<string,CouchListHandler> Lists { get; set; }
+        public IDictionary<string,CouchDocumentUpdateHandler> DocumentUpdaters { get; set; }
 
         #region ctor
 
@@ -53,9 +39,9 @@ namespace CouchNet.Impl
             Name = name;
             Database = database;
             Id = "_design/" + Name;
-            Views = new Dictionary<string, CouchViewDefinition>();
-            Shows = new Dictionary<string, string>();
-            Lists = new Dictionary<string, string>();
+            Views = new Dictionary<string, CouchView>();
+            Shows = new Dictionary<string, CouchShowHandler>();
+            Lists = new Dictionary<string, CouchListHandler>();
             HasPendingChanges = true;
         }
 
@@ -66,9 +52,10 @@ namespace CouchNet.Impl
             Id = designDocument.Id;
             Revision = designDocument.Revision;
             Name = designDocument.Id.Replace("_design/", string.Empty);
-            Views = designDocument.Views;
-            Shows = designDocument.Shows;
-            Lists = designDocument.Lists;
+            Views = designDocument.Views.ToDictionary(k => k.Key, v => new CouchView(v,this));
+            Shows = designDocument.Shows.ToDictionary(k => k.Key, v => new CouchShowHandler(v,this));
+            Lists = designDocument.Lists.ToDictionary(k => k.Key, v => new CouchListHandler(v, this));
+            DocumentUpdaters = designDocument.DocumentUpdateHandlers.ToDictionary(k => k.Key, v => new CouchDocumentUpdateHandler(v, this));
             Language = designDocument.Language;
             HasPendingChanges = false;
         }
@@ -77,26 +64,16 @@ namespace CouchNet.Impl
 
         #region Views
 
-        public CouchView View(string name)
-        {
-            var result = Views.Where(x => x.Key.ToLower() == name.ToLower());
-
-            if (result.Count() != 1)
-            {
-                throw new CouchNetDocumentNotFoundException(name);
-            }
-
-            return new CouchView(result.FirstOrDefault(), this);
-        }
-
         public CouchView CreateView(string name)
         {
-            return new CouchView(name, this);
+            var view = new CouchView(name, this);
+            Views.Add(name, view);
+            return view;
         }
 
         public ICouchQueryResults<T> ExecuteView<T>(string viewName, CouchViewQuery query) where T : ICouchDocument
         {
-            return ExecuteView<T>(View(viewName), query);
+            return ExecuteView<T>(Views[viewName], query);
         }
 
         public ICouchQueryResults<T> ExecuteView<T>(CouchView view, CouchViewQuery query) where T : ICouchDocument
@@ -114,41 +91,31 @@ namespace CouchNet.Impl
 
         #region Shows
 
-        public CouchShowHandler Show(string name)
-        {
-            var result = Shows.Where(x => x.Key.ToLower() == name.ToLower());
-
-            if (result.Count() != 1)
-            {
-                throw new CouchNetDocumentNotFoundException(name);
-            }
-
-            return new CouchShowHandler(result.FirstOrDefault(),this);        
-        }
-
         public CouchShowHandler CreateShow(string name)
         {
-            return new CouchShowHandler(name, this);
+            var show = new CouchShowHandler(name, this);
+            Shows.Add(name, show);
+            return show;
         }
 
         public CouchHandlerResponse ExecuteShow(string handler)
         {
-            return ExecuteShow(Show(handler), null, new NameValueCollection());
+            return ExecuteShow(Shows[handler], null, new NameValueCollection());
         }
 
         public CouchHandlerResponse ExecuteShow(string handler, NameValueCollection queryString)
         {
-            return ExecuteShow(Show(handler), null, queryString);
+            return ExecuteShow(Shows[handler], null, queryString);
         }
 
         public CouchHandlerResponse ExecuteShow(string handler, string documentId)
         {
-            return ExecuteShow(Show(handler), documentId, new NameValueCollection());
+            return ExecuteShow(Shows[handler], documentId, new NameValueCollection());
         }
 
         public CouchHandlerResponse ExecuteShow(string handler, string documentId, NameValueCollection queryString)
         {
-            return ExecuteShow(Show(handler), documentId, queryString);
+            return ExecuteShow(Shows[handler], documentId, queryString);
         }
 
         public CouchHandlerResponse ExecuteShow(CouchShowHandler handler, string documentId, NameValueCollection queryString)
@@ -180,26 +147,16 @@ namespace CouchNet.Impl
 
         #region Lists
 
-        public CouchListHandler List(string name)
-        {
-            var result = Lists.Where(x => x.Key.ToLower() == name.ToLower());
-
-            if (result.Count() != 1)
-            {
-                throw new CouchNetDocumentNotFoundException(name);
-            }
-
-            return new CouchListHandler(result.FirstOrDefault(), this);
-        }
-
         public CouchListHandler CreateList(string name)
         {
-            return new CouchListHandler(name, this);
+            var list = new CouchListHandler(name, this);
+            Lists.Add(name, list);
+            return list;
         }
 
         public CouchHandlerResponse ExecuteList(string handler, string viewName, CouchViewQuery query)
         {
-            return ExecuteList(List(handler), View(viewName), query);
+            return ExecuteList(Lists[handler], Views[viewName], query);
         }
 
         public CouchHandlerResponse ExecuteList(CouchListHandler handler, CouchView view, CouchViewQuery query)
@@ -209,6 +166,23 @@ namespace CouchNet.Impl
             var rawResponse = Database.Service.Connection.Get(path);
 
             return new CouchHandlerResponse(rawResponse);
+        }
+
+        #endregion
+
+        #region Updaters
+
+        public CouchDocumentUpdateHandler CreateDocumentUpdater(string name)
+        {
+            var updater = new CouchDocumentUpdateHandler(name, this);
+            DocumentUpdaters.Add(name, updater);
+            return updater;
+        }
+
+        public CouchHandlerResponse ExecuteDocumentUpdater(CouchDocumentUpdateHandler handler, string documentId, NameValueCollection queryString)
+        {
+            //201 created + output
+            throw new NotImplementedException();
         }
 
         #endregion
