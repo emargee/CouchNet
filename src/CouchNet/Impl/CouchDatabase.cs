@@ -465,12 +465,9 @@ namespace CouchNet.Impl
 
         private T Get<T>(string id, QueryString queryString) where T : ICouchDocument
         {
-            if (Service.EnableValidation)
+            if (Service.EnableValidation && !Exists(id))
             {
-                if(!Exists(id))
-                {
-                    throw new CouchDocumentNotFoundException(id);
-                }
+                throw new CouchDocumentNotFoundException(id);
             }
 
             var path = string.Format("{0}/{1}{2}", Name, id, queryString);
