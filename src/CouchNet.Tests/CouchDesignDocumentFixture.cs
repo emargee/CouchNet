@@ -36,7 +36,7 @@ namespace CouchNet.Tests
 
             var svc = new CouchService(_connectionMock.Object);
 
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var query = new CouchViewQuery().Key("apple");
 

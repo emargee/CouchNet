@@ -16,6 +16,14 @@ namespace CouchNet
 
         public bool EnableValidation { get; set; }
 
+        public CouchDatabase this[string name]
+        {
+            get
+            {
+                return GetDatabase(name);
+            }
+        }
+
         #region ctor
 
         public CouchService(ICouchConnection connection)
@@ -37,24 +45,29 @@ namespace CouchNet
 
         #region Database Control
 
-        public CouchDatabase Database(string name)
+        public CouchDatabase CreateDatabase(string name)
         {
-            if (EnableValidation)
-            {
-                var head = Connection.Head(name).StatusCode;
+            throw new NotImplementedException();
+        }
 
-                if (head != HttpStatusCode.OK && head != HttpStatusCode.NotModified)
-                {
-                    throw new CouchDocumentNotFoundException(name);
-                }
-            }
+        public ICouchServerResponse DropDatabase(string name)
+        {
+            throw new NotImplementedException();
+        }
 
+        public CouchDatabase GetDatabase(string name)
+        {
             return new CouchDatabase(name, this);
         }
 
         private bool DatabaseExists(CouchDatabase database)
         {
-            var head = Connection.Head(database.Name).StatusCode;
+            return database != null && DatabaseExists(database.Name);
+        }
+
+        private bool DatabaseExists(string databaseName)
+        {
+            var head = Connection.Head(databaseName).StatusCode;
 
             return head == HttpStatusCode.OK || head == HttpStatusCode.NotModified;
         }

@@ -79,6 +79,16 @@ namespace CouchNet.Impl
                 databaseName = databaseName.Replace("/", "%2F"); //Should encode whole name ? 
             }
 
+            if (Service.EnableValidation)
+            {
+                var head = Service.Connection.Head(databaseName).StatusCode;
+
+                if (head != HttpStatusCode.OK && head != HttpStatusCode.NotModified)
+                {
+                    throw new CouchDatabaseNotFoundException(databaseName);
+                }
+            }
+
             Name = databaseName;
 
             BulkUpdateBehaviour = CouchBulkUpdateBehaviour.NonAtomic;
@@ -357,9 +367,10 @@ namespace CouchNet.Impl
 
         public CouchDesignDocument CreateDesignDocument(string name)
         {
-            var doc = new CouchDesignDocument(name, this);
-            DesignDocuments.Add(doc);
-            return doc;
+            throw new NotImplementedException();
+            //var doc = new CouchDesignDocument(name, this);
+            //DesignDocuments.Add(doc);
+            //return doc;
         }
 
         public CouchDesignDocument DesignDocument(string name)
@@ -367,11 +378,6 @@ namespace CouchNet.Impl
             var documentName = "_design/" + name;
 
             var result = Get<CouchDesignDocumentDefinition>(documentName);
-
-            if (result == null)
-            {
-                throw new CouchDocumentNotFoundException(name);
-            }
 
             return new CouchDesignDocument(result, this);
         }
@@ -459,16 +465,6 @@ namespace CouchNet.Impl
 
         private T Get<T>(string id, QueryString queryString) where T : ICouchDocument
         {
-            if(string.IsNullOrEmpty(id))
-            {
-                throw new ArgumentNullException(id);
-            }
-
-            if(queryString == null)
-            {
-                queryString = new QueryString();
-            }
-
             if (Service.EnableValidation)
             {
                 if(!Exists(id))

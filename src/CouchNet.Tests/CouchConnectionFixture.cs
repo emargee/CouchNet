@@ -366,6 +366,19 @@ namespace CouchNet.Tests
             Assert.IsNotNull(repsonse);
         }
 
+        [Test]
+        public void HttpOperation_Head()
+        {
+            var testPath = "/";
+
+            _httpTransport.Setup(x => x.Send(testPath, HttpVerb.Head, null, null)).Returns(_httpResponse.Object);
+
+            var connection = new CouchConnection("http://localhost/", _httpTransportFactory.Object);
+            var repsonse = connection.Head(testPath);
+
+            Assert.IsNotNull(repsonse);
+        }
+
         #endregion
 
     }

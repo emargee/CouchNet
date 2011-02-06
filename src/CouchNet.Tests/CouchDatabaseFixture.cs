@@ -218,7 +218,7 @@ namespace CouchNet.Tests
         {
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("UnItTeSt");
+            var db = svc.GetDatabase("UnItTeSt");
             Assert.IsNotNull(db);
             Assert.AreEqual("unittest", db.Name);
         }
@@ -228,7 +228,7 @@ namespace CouchNet.Tests
         {
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("his/her");
+            var db = svc.GetDatabase("his/her");
             Assert.IsNotNull(db);
             Assert.AreEqual("his%2Fher", db.Name);
         }
@@ -238,7 +238,7 @@ namespace CouchNet.Tests
         {
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             Assert.IsNotNull(db);
         }
 
@@ -247,7 +247,17 @@ namespace CouchNet.Tests
         {
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             var svc = new CouchService(_connectionMock.Object);
-            Assert.Throws<ArgumentNullException>(() => svc.Database(null));
+            Assert.Throws<ArgumentNullException>(() => svc.GetDatabase(null));
+        }
+
+        [Test]
+        public void Ctor_CreateNotFoundWithValidatiion_Throws()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Head("unittest")).Returns(_statusErrorResponse.Object);
+            var svc = new CouchService(_connectionMock.Object);
+            svc.EnableValidation = true;
+            Assert.Throws<CouchDatabaseNotFoundException>(() => svc.GetDatabase("unittest"));
         }
 
         [Test]
@@ -255,7 +265,7 @@ namespace CouchNet.Tests
         {
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             string test = null;
             Assert.Throws<ArgumentNullException>(() => db.Get<ExampleEntity>(test));
         }
@@ -267,7 +277,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest")).Returns(_statusErrorResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             var result = db.Status();
 
             Assert.IsNotNull(result);
@@ -281,7 +291,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest")).Returns(_statusResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             var result = db.Status();
 
             Assert.AreEqual("unittest", result.DatabaseName);
@@ -302,7 +312,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest")).Returns(_statusResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             var result = db.DocumentCount();
 
             Assert.AreEqual(1, result);
@@ -315,7 +325,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest")).Returns(_statusErrorResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             var result = db.DocumentCount();
 
             Assert.AreEqual(-1, result);
@@ -328,7 +338,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/abc123")).Returns(_basicResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             var result = db.Get<ExampleEntity>("abc123");
 
             Assert.IsNotNull(result);
@@ -344,8 +354,66 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/abc123")).Returns(_notFoundResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             Assert.Throws<CouchDocumentNotFoundException>(() => db.Get<ExampleEntity>("abc123"));
+        }
+
+        [Test]
+        public void Get_NotFoundWithValidation_ShouldThrow()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Head("unittest")).Returns(_basicResponse.Object);
+            _connectionMock.Setup(s => s.Head("unittest/abc123")).Returns(_notFoundResponse.Object);
+
+            var svc = new CouchService(_connectionMock.Object);
+            svc.EnableValidation = true;
+
+            var db = svc.GetDatabase("unittest");
+            Assert.Throws<CouchDocumentNotFoundException>(() => db.Get<ExampleEntity>("abc123"));
+        }
+
+        [Test]
+        public void Exists_NotFoundWithId_IsFalse()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Head("unittest")).Returns(_basicResponse.Object);
+            _connectionMock.Setup(s => s.Head("unittest/abc123")).Returns(_notFoundResponse.Object);
+
+            var svc = new CouchService(_connectionMock.Object);
+            svc.EnableValidation = true;
+
+            var db = svc.GetDatabase("unittest");
+            Assert.IsFalse(db.Exists("abc123"));
+        }
+
+        [Test]
+        public void Exists_NotFoundNull_IsFalse()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Head("unittest")).Returns(_basicResponse.Object);
+            _connectionMock.Setup(s => s.Head("unittest/abc123")).Returns(_notFoundResponse.Object);
+
+            var svc = new CouchService(_connectionMock.Object);
+            svc.EnableValidation = true;
+
+            var db = svc.GetDatabase("unittest");
+            CouchDocument doc = null;
+            Assert.IsFalse(db.Exists(doc));
+        }
+
+        [Test]
+        public void Exists_NotFoundWithObject_IsFalse()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Head("unittest")).Returns(_basicResponse.Object);
+            _connectionMock.Setup(s => s.Head("unittest/abc123")).Returns(_notFoundResponse.Object);
+
+            var svc = new CouchService(_connectionMock.Object);
+            svc.EnableValidation = true;
+
+            var db = svc.GetDatabase("unittest");
+            var doc = new CouchDocument { Id = "abc123" };
+            Assert.IsFalse(db.Exists(doc));
         }
 
         [Test]
@@ -355,7 +423,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/abc123")).Returns(_missingFieldResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             var result = db.Get<ExampleEntity>("abc123");
 
             Assert.IsNotNull(result);
@@ -371,7 +439,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/abc123?rev=946B7D1C")).Returns(_basicResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             var result = db.Get<ExampleEntity>("abc123", "946B7D1C");
 
             Assert.IsNotNull(result);
@@ -388,7 +456,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/abc123?revs=true")).Returns(_revisionsResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             var result = db.Get<ExampleEntity>("abc123", CouchDocumentOptions.IncludeRevisions);
 
             Assert.IsNotNull(result);
@@ -404,7 +472,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/abc123?revs_info=true")).Returns(_revisionInfoResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             var result = db.Get<ExampleEntity>("abc123", CouchDocumentOptions.RevisionInfo);
 
             Assert.IsNotNull(result);
@@ -420,7 +488,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/abc123?revs_info=true&revs=true")).Returns(_revisionInfoResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             var result = db.Get<ExampleEntity>("abc123", CouchDocumentOptions.RevisionInfo | CouchDocumentOptions.IncludeRevisions);
 
             Assert.IsNotNull(result);
@@ -435,7 +503,7 @@ namespace CouchNet.Tests
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             Assert.Throws<ArgumentNullException>(() => db.Get<ExampleEntity>(null, null));
 
         }
@@ -446,7 +514,7 @@ namespace CouchNet.Tests
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             Assert.Throws<ArgumentNullException>(() => db.Get<ExampleEntity>(null, CouchDocumentOptions.None));
         }
 
@@ -457,7 +525,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/_revs_limit")).Returns(_revisionLimitGetResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             Assert.AreEqual(1000, db.RevisionsLimit);
         }
 
@@ -468,7 +536,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/_revs_limit")).Returns(_revisionLimitErrorResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             Assert.AreEqual(-1, db.RevisionsLimit);
         }
 
@@ -479,7 +547,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/_revs_limit")).Returns(_revisionLimitCastErrorResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             Assert.AreEqual(0, db.RevisionsLimit);
         }
 
@@ -490,7 +558,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Put("unittest/_revs_limit", "1500")).Returns(_revisionLimitSetResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             db.RevisionsLimit = 1500;
         }
 
@@ -501,7 +569,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Put("unittest/_revs_limit", "1500")).Returns(_revisionLimitSetErrorResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             db.RevisionsLimit = 1500;
         }
 
@@ -511,7 +579,7 @@ namespace CouchNet.Tests
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             ICouchDocument test = null;
             Assert.Throws<ArgumentNullException>(() => db.Add(test));
         }
@@ -523,7 +591,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Put(It.IsAny<string>(), It.IsAny<string>())).Returns(_addDocumentResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             var response = db.Add(new ExampleEntity { Age = 22, IsAlive = false, Name = "Bob" });
 
             Assert.IsNotNull(response);
@@ -539,7 +607,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Put("unittest/some_doc_id", It.IsAny<string>())).Returns(_addDocumentResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             var response = db.Add(new ExampleEntity { Id = "some_doc_id", Age = 22, IsAlive = false, Name = "Bob" });
 
             Assert.IsNotNull(response);
@@ -555,7 +623,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Put("unittest/some_doc_id", It.IsAny<string>())).Returns(_addConflictDocumentResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             var response = db.Add(new ExampleEntity { Id = "some_doc_id", Age = 22, IsAlive = false, Name = "Bob" });
 
             Assert.IsNotNull(response);
@@ -571,7 +639,7 @@ namespace CouchNet.Tests
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             ICouchDocument test = null;
             Assert.Throws<ArgumentNullException>(() => db.Save(test));
         }
@@ -582,7 +650,7 @@ namespace CouchNet.Tests
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             Assert.Throws<InvalidOperationException>(() => db.Save(new ExampleEntity { Id = "some_doc_id", Age = 22, IsAlive = false, Name = "Bob" }));
         }
@@ -594,7 +662,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(x => x.Put("unittest/4847d6617eda4b7f97c38feff9bf66f1", "{\"name\":\"jim\",\"age\":0,\"isAlive\":false,\"_id\":\"4847d6617eda4b7f97c38feff9bf66f1\",\"_rev\":\"1-946B7D1C\"}")).Returns(_saveDocumentResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var resp = db.Save(new ExampleEntity { Id = "4847d6617eda4b7f97c38feff9bf66f1", Name = "jim", Revision = "1-946B7D1C" });
 
@@ -610,11 +678,11 @@ namespace CouchNet.Tests
             _connectionMock.Setup(x => x.Put("unittest/4847d6617eda4b7f97c38feff9bf66f1", "{\"name\":\"jim\",\"age\":0,\"isAlive\":false,\"_id\":\"4847d6617eda4b7f97c38feff9bf66f1\",\"_rev\":\"1-946B7D1C\"}")).Returns(_saveDocumentMangledResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var resp = db.Save(new ExampleEntity { Id = "4847d6617eda4b7f97c38feff9bf66f1", Name = "jim", Revision = "1-946B7D1C" });
             Assert.IsFalse(resp.IsOk);
-            Assert.AreEqual("CouchNet Deserialization Error",resp.ErrorType);
+            Assert.AreEqual("CouchNet Deserialization Error", resp.ErrorType);
         }
 
         [Test]
@@ -623,9 +691,9 @@ namespace CouchNet.Tests
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
-            Assert.Throws<InvalidCastException>(() => db.Save(new BadJsonPropertyClass { Id = "4847d6617eda4b7f97c38feff9bf66f1", Revision = "1-946B7D1C" }));       
+            Assert.Throws<InvalidCastException>(() => db.Save(new BadJsonPropertyClass { Id = "4847d6617eda4b7f97c38feff9bf66f1", Revision = "1-946B7D1C" }));
         }
 
         [Test]
@@ -634,7 +702,7 @@ namespace CouchNet.Tests
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             Assert.Throws<ArgumentNullException>(() => db.Delete(null, null));
 
@@ -646,7 +714,7 @@ namespace CouchNet.Tests
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             Assert.Throws<ArgumentNullException>(() => db.Delete(null));
         }
@@ -658,7 +726,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Delete("unittest/some_doc_id?rev=1234")).Returns(_deleteDocumentResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var response = db.Delete("some_doc_id", "1234");
 
@@ -678,7 +746,7 @@ namespace CouchNet.Tests
             docMock.Setup(s => s.Revision).Returns("1234");
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var response = db.Delete(docMock.Object);
 
@@ -696,7 +764,7 @@ namespace CouchNet.Tests
             docMock.SetupAllProperties();
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             Assert.Throws<InvalidOperationException>(() => db.Delete(docMock.Object));
         }
@@ -712,7 +780,7 @@ namespace CouchNet.Tests
             docMock.Setup(s => s.Revision).Returns("1234");
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var response = db.Delete(docMock.Object);
 
@@ -727,7 +795,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/_all_docs")).Returns(_getAllIdsResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var results = db.GetAll().ToList();
 
@@ -744,7 +812,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/_all_docs?limit=10&descending=true&startkey=%22test1%22&endkey=%22test52%22")).Returns(_getAllIdsResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var query = new CouchViewQuery()
             {
@@ -767,7 +835,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/_all_docs")).Returns(_getAllIdsErrorResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             var results = db.GetAll();
 
             Assert.NotNull(results);
@@ -781,7 +849,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/_all_docs?include_docs=true")).Returns(_getAllObjResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var results = db.GetAll<ExampleEntity>();
 
@@ -806,7 +874,7 @@ namespace CouchNet.Tests
                             };
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var results = db.GetAll<ExampleEntity>(query);
             Assert.AreEqual(2, results.Count());
@@ -821,7 +889,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Get("unittest/_all_docs?include_docs=true")).Returns(_getAllIdsErrorResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var results = db.GetAll<ExampleEntity>();
 
@@ -836,7 +904,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Post("unittest/_all_docs?include_docs=true", "{\"keys\":[\"bar\",\"baz\"]}")).Returns(_getManyResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var results = db.GetMany<ExampleEntity>(new[] { "bar", "baz" });
 
@@ -852,7 +920,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Post("unittest/_all_docs", "{\"keys\":[\"bar\",\"baz\"]}")).Returns(_getManyResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var results = db.GetMany(new[] { "bar", "baz" });
 
@@ -869,7 +937,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Post("unittest/_all_docs?include_docs=true", "{\"keys\":[\"bar\",\"baz\"]}")).Returns(_getManyErrorResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var results = db.GetMany<ExampleEntity>(new[] { "bar", "baz" });
 
@@ -885,7 +953,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Post("unittest/_all_docs", "{\"keys\":[\"bar\",\"baz\"]}")).Returns(_getManyErrorResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var results = db.GetMany(new[] { "bar", "baz" });
 
@@ -902,7 +970,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Post("unittest/_bulk_docs", postData)).Returns(_bulkAddResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var resp = db.AddMany(new[] { new ExampleEntity { Name = "jim", Id = "0" }, new ExampleEntity { Id = "1", Name = "billy" } });
 
@@ -921,7 +989,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Post("unittest/_bulk_docs", postData)).Returns(_bulkAddNoIdsResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var resp = db.AddMany(new[] { new ExampleEntity { Name = "jim" }, new ExampleEntity { Name = "billy" } });
 
@@ -939,7 +1007,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Post("unittest/_bulk_docs", postData)).Returns(_bulkAddErrorResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var resp = db.AddMany(new[] { new ExampleEntity { Name = "jim", Id = "0" }, new ExampleEntity { Id = "1", Name = "billy" } });
 
@@ -957,7 +1025,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Post("unittest/_bulk_docs", postData)).Returns(_bulkAddNoIdsResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             db.BulkUpdateBehaviour = CouchBulkUpdateBehaviour.AllOrNothing;
             var resp = db.AddMany(new[] { new ExampleEntity { Name = "jim" }, new ExampleEntity { Name = "billy" } });
@@ -973,7 +1041,7 @@ namespace CouchNet.Tests
         {
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             Assert.Throws<InvalidOperationException>(() => db.SaveMany(new[] { new ExampleEntity { Name = "jim" }, new ExampleEntity { Name = "billy" } }));
         }
@@ -986,7 +1054,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Post("unittest/_bulk_docs", postData)).Returns(_bulkAddNoIdsResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var resp = db.SaveMany(new[]
                             {
@@ -1008,7 +1076,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Post("unittest/_bulk_docs", postData)).Returns(_bulkAddNoIdsResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             db.BulkUpdateBehaviour = CouchBulkUpdateBehaviour.AllOrNothing;
 
@@ -1033,7 +1101,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Post("unittest/_bulk_docs", postData)).Returns(_bulkSaveErrorResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var resp = db.SaveMany(new[]
                             {
@@ -1051,7 +1119,7 @@ namespace CouchNet.Tests
         {
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             Assert.Throws<ArgumentNullException>(() => db.Copy(null, null, null));
 
@@ -1066,7 +1134,7 @@ namespace CouchNet.Tests
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             _connectionMock.Setup(x => x.Copy("unittest/123456", "56789")).Returns(_copyResponse.Object);
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var resp = db.Copy(new ExampleEntity { Id = "123456" }, "56789");
 
@@ -1081,7 +1149,7 @@ namespace CouchNet.Tests
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             _connectionMock.Setup(x => x.Copy("unittest/123456", "56789")).Returns(_copyResponse.Object);
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var resp = db.Copy("123456", "56789");
 
@@ -1096,7 +1164,7 @@ namespace CouchNet.Tests
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             _connectionMock.Setup(x => x.Copy("unittest/123456", "56789?rev=1-12345678")).Returns(_copyResponse.Object);
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var resp = db.Copy("123456", "56789", "1-12345678");
 
@@ -1111,7 +1179,7 @@ namespace CouchNet.Tests
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             _connectionMock.Setup(x => x.Copy("unittest/123456", "56789?rev=1-12345678")).Returns(_copyErrorResponse.Object);
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var resp = db.Copy("123456", "56789", "1-12345678");
 
@@ -1128,24 +1196,35 @@ namespace CouchNet.Tests
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             _connectionMock.Setup(x => x.Get("unittest/_design/example")).Returns(_designDocument.Object);
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var doc = db.DesignDocument("example");
-            
+
             Assert.IsNotNull(doc);
             Assert.AreEqual("javascript", doc.Language);
             Assert.AreEqual("_design/example", doc.Id);
-            Assert.AreEqual("example",doc.Name);
+            Assert.AreEqual("example", doc.Name);
             Assert.AreEqual(1, doc.Views.Count);
         }
 
         [Test]
-        public void GetDesignDocument_EmptyDocument()
+        public void GetDesignDocument_EmptyDocument_Throws()
         {
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             _connectionMock.Setup(x => x.Get("unittest/_design/example")).Returns(_designDocumentError.Object);
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
+
+            Assert.Throws<CouchDocumentNotFoundException>(() => db.DesignDocument("example"));
+        }
+
+        [Test]
+        public void GetDesignDocument_MissingDocument_Throws()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(x => x.Get("unittest/_design/example")).Returns(_designDocumentError.Object);
+            var svc = new CouchService(_connectionMock.Object);
+            var db = svc.GetDatabase("unittest");
 
             Assert.Throws<CouchDocumentNotFoundException>(() => db.DesignDocument("example"));
         }
@@ -1157,12 +1236,10 @@ namespace CouchNet.Tests
         [Test]
         public void TempView_CanSerialize()
         {
-
-
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             _connectionMock.Setup(x => x.Post("unittest/_temp_view", "{\"language\":\"javascript\",\"map\":\"function(doc) { if (doc.foo=='bar') { emit(null, doc.foo); } }\",\"reduce\":\"function (key, values, rereduce) { return sum(values); }\"}", "application/json")).Returns(_viewEmptyResults.Object);
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var temp = new CouchTempView
             {
@@ -1181,7 +1258,7 @@ namespace CouchNet.Tests
         {
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             var temp = new CouchTempView();
 
             Assert.Throws<ArgumentException>(() => db.ExecuteTempView<CouchDocument>(temp, new CouchViewQuery()));
@@ -1192,7 +1269,7 @@ namespace CouchNet.Tests
         {
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
             var svc = new CouchService(_connectionMock.Object);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var temp = new CouchTempView
             {
@@ -1315,7 +1392,7 @@ namespace CouchNet.Tests
         //    var query = new CouchViewQuery().Key("089b887ff7b04a5bb31b68695f5cff01");
 
         //    var result = db.ExecuteList("example", "htmlList", "test", query);
-            
+
         //    Assert.IsNotNull(result);
         //    Assert.IsTrue(result.IsOk);
         //    Assert.IsNotNullOrEmpty(result.ContentType);

@@ -1,4 +1,4 @@
-[Newtonsoft.Json.dll] - Json.NET 3.5 Release 6 (Dec 26 2009) - http://json.codeplex.com/
+[Newtonsoft.Json.dll] - Json.NET 4.0 Release 1 (.Net35 Version) (Jan 2011) - http://json.codeplex.com/
 [Microsoft.Http.dll] - WCF REST Starter Kit Preview 2 (Mar 12 2009) - http://aspnet.codeplex.com/wikipage?title=WCF%20REST
 [Moq.dll] - Moq v3.1.416 (Apr 2009) - http://code.google.com/p/moq/
 [Nunit.framework.dll] - Nunit v2.5.3.9345 - http://www.nunit.org/

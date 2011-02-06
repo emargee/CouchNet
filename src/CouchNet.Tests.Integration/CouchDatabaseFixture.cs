@@ -14,7 +14,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://127.0.0.1", 5984);
             var svc = new CouchService(conn);
-            var db = svc.Database("integrationtest");
+            var db = svc.GetDatabase("integrationtest");
 
             var card = new BusinessCard { Name = "Bob Smith", Employer = "GiantMart", JobTitle = "Manager" };
 
@@ -30,7 +30,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://127.0.0.1", 5984);
             var svc = new CouchService(conn);
-            var db = svc.Database("integrationtest");
+            var db = svc.GetDatabase("integrationtest");
 
             var card = new BusinessCard { Name = "Bob Smith", Employer = "GiantMart", JobTitle = "Manager" };
 
@@ -49,7 +49,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://127.0.0.1", 5984);
             var svc = new CouchService(conn);
-            var db = svc.Database("integrationtest");
+            var db = svc.GetDatabase("integrationtest");
 
             var card1 = new BusinessCard { Name = "Bob Smith", Employer = "GiantMart", JobTitle = "Manager" };
             var card2 = new BusinessCard { Name = "Jack Smith", Employer = "MediumMart", JobTitle = "Manager" };
@@ -85,7 +85,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://127.0.0.1", 5984);
             var svc = new CouchService(conn);
-            var db = svc.Database("integrationtest");
+            var db = svc.GetDatabase("integrationtest");
 
             var status = db.Status();
             Assert.AreEqual("integrationtest", status.DatabaseName);

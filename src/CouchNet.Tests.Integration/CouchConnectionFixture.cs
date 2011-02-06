@@ -13,7 +13,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost", 5984);
             var svc = new CouchService(conn);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             var card = new BusinessCard { Name = "Billy Smith", Employer = "Smith Industries", JobTitle = "Eating Horses" };
 
             var response = db.Add(card);

@@ -15,7 +15,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
             var svc = new CouchService(conn);
-            var db = svc.Database("integrationtest");
+            var db = svc.GetDatabase("integrationtest");
 
             var query = new CouchViewQuery().Key("apple");
 
@@ -51,7 +51,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
             var svc = new CouchService(conn);
-            var db = svc.Database("integrationtest");
+            var db = svc.GetDatabase("integrationtest");
 
             var query = new CouchViewQuery().Key("apple").Limit(0);
 
@@ -88,7 +88,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
             var svc = new CouchService(conn);
-            var db = svc.Database("integrationtest");
+            var db = svc.GetDatabase("integrationtest");
 
             var query = new CouchViewQuery().Key(new[] { "apple", "orange" });
 
@@ -124,7 +124,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
             var svc = new CouchService(conn);
-            var db = svc.Database("integrationtest");
+            var db = svc.GetDatabase("integrationtest");
 
             var query = new CouchViewQuery().Key(new[] { "apple", "orange" }).Limit(0);
 
@@ -161,7 +161,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
                         var svc = new CouchService(conn);
-            var db = svc.Database("integrationtest");
+            var db = svc.GetDatabase("integrationtest");
 
             var query = new CouchViewQuery().Key(new[] { "apple", "cats" }).EndKey(new[] { "apple", "*" });
 
@@ -197,7 +197,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
             var svc = new CouchService(conn);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
             var temp = new CouchTempView { Map = "function(doc) {\n  emit(null, doc);\n}" };
             var results = db.ExecuteTempView<BusinessCard>(temp, new CouchViewQuery());
 
@@ -226,7 +226,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
             var svc = new CouchService(conn);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var result = db.DesignDocument("example").ExecuteShow("test");
             Debug.WriteLine(result.Output);
@@ -243,7 +243,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
             var svc = new CouchService(conn);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var result = db.DesignDocument("example").ExecuteList("htmlList", "test", new CouchViewQuery());
 
@@ -260,7 +260,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost:5984/");
             var svc = new CouchService(conn);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             var doc = db.DesignDocument("example");
 

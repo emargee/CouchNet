@@ -70,7 +70,7 @@ namespace CouchNet.Tests.Integration
             conn.Cache = cache;
 
             var svc = new CouchService(conn);
-            var db = svc.Database("integrationtest");
+            var db = svc.GetDatabase("integrationtest");
 
             var resp = db.Get<BusinessCard>("d1d2bac2b4e65baf10be20bf08000189");
             Debug.WriteLine("Name : " + resp.Name);

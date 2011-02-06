@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using CouchNet.Exceptions;
 using CouchNet.HttpTransport;
 using CouchNet.Impl;
 using Moq;
@@ -35,7 +36,7 @@ namespace CouchNet.Tests
             _connectionMock.Setup(s => s.Post("unittest/_compact", null)).Returns(_successResponse.Object);
 
             var svc = new CouchService(_connectionMock.Object);
-            var result = svc.BeginDatabaseCompact(svc.Database("unittest"));
+            var result = svc.BeginDatabaseCompact(svc.GetDatabase("unittest"));
 
             Assert.IsTrue(result.IsOk);
         }
@@ -50,7 +51,6 @@ namespace CouchNet.Tests
             Assert.Throws<ArgumentNullException>(() => svc.BeginDatabaseCompact(null));
         }
 
-
         //[Test]
         //public void Compact_MissingDb_Throws()
         //{
@@ -58,7 +58,7 @@ namespace CouchNet.Tests
         //    _connectionMock.Setup(s => s.Post("unittest/_compact", null)).Returns(_errorMissingResponse.Object);
 
         //    var svc = new CouchService(_connectionMock.Object);
-        //    Assert.Throws<ArgumentNullException>(() => svc.BeginDatabaseCompact(svc.Database("unittest")));
+        //    Assert.Throws<ArgumentNullException>(() => svc.BeginDatabaseCompact(svc.GetDatabase("unittest")));
         //}
 
         //[Test]

@@ -17,7 +17,7 @@ namespace CouchNet.Tests.Integration
         {
             var conn = new CouchConnection("http://localhost", 5984);
             var svc = new CouchService(conn);
-            var db = svc.Database("unittest");
+            var db = svc["unittest"];
 
             // -- ADDING FROM NEW --- 
 
@@ -65,13 +65,13 @@ namespace CouchNet.Tests.Integration
             var ex = new BusinessCard();
 
             var svc = new CouchService(conn);
-            var db2 = svc.Database("unittest");
+            var db2 = svc["unittest"];
             var doc = db2.DesignDocument("monkeytennis");
 
-            svc.Database("unittest").DesignDocument("monkeyTennis").Views["test"].Execute<BusinessCard>(new CouchViewQuery());
-            svc.Database("unittest").DesignDocument("monkeyTennis").Shows["test"].Execute("1234");
+            svc["unittest"].DesignDocument("monkeyTennis").Views["test"].Execute<BusinessCard>(new CouchViewQuery());
+            svc["unittest"].DesignDocument("monkeyTennis").Shows["test"].Execute("1234");
 
-            svc.Database("unittest").DesignDocument("monkeyTennis");
+            svc["unittest"].DesignDocument("monkeyTennis");
 
             //var show = db.DesignDocument("example").Show("test");
 
@@ -151,7 +151,7 @@ namespace CouchNet.Tests.Integration
             var conn = new CouchConnection("http://localhost", 5984);
 
             var svc = new CouchService(conn);
-            var db = svc.Database("unittest");
+            var db = svc.GetDatabase("unittest");
 
             //var view = db.DesignDocument("example").View("test");
 
