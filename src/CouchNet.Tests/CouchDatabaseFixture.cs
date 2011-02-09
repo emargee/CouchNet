@@ -313,7 +313,7 @@ namespace CouchNet.Tests
 
             var svc = new CouchService(_connectionMock.Object);
             var db = svc.GetDatabase("unittest");
-            var result = db.DocumentCount();
+            var result = db.Count();
 
             Assert.AreEqual(1, result);
         }
@@ -326,7 +326,7 @@ namespace CouchNet.Tests
 
             var svc = new CouchService(_connectionMock.Object);
             var db = svc.GetDatabase("unittest");
-            var result = db.DocumentCount();
+            var result = db.Count();
 
             Assert.AreEqual(-1, result);
         }
@@ -1198,7 +1198,24 @@ namespace CouchNet.Tests
             var svc = new CouchService(_connectionMock.Object);
             var db = svc.GetDatabase("unittest");
 
-            var doc = db.DesignDocument("example");
+            var doc = db.GetDesignDocument("example");
+
+            Assert.IsNotNull(doc);
+            Assert.AreEqual("javascript", doc.Language);
+            Assert.AreEqual("_design/example", doc.Id);
+            Assert.AreEqual("example", doc.Name);
+            Assert.AreEqual(1, doc.Views.Count);
+        }
+
+        [Test]
+        public void GetDesignDocument_Indexer()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(x => x.Get("unittest/_design/example")).Returns(_designDocument.Object);
+            var svc = new CouchService(_connectionMock.Object);
+            var db = svc.GetDatabase("unittest");
+
+            var doc = db["example"];
 
             Assert.IsNotNull(doc);
             Assert.AreEqual("javascript", doc.Language);
@@ -1215,7 +1232,7 @@ namespace CouchNet.Tests
             var svc = new CouchService(_connectionMock.Object);
             var db = svc.GetDatabase("unittest");
 
-            Assert.Throws<CouchDocumentNotFoundException>(() => db.DesignDocument("example"));
+            Assert.Throws<CouchDocumentNotFoundException>(() => db.GetDesignDocument("example"));
         }
 
         [Test]
@@ -1226,7 +1243,7 @@ namespace CouchNet.Tests
             var svc = new CouchService(_connectionMock.Object);
             var db = svc.GetDatabase("unittest");
 
-            Assert.Throws<CouchDocumentNotFoundException>(() => db.DesignDocument("example"));
+            Assert.Throws<CouchDocumentNotFoundException>(() => db.GetDesignDocument("example"));
         }
 
         #endregion

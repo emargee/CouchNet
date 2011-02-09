@@ -30,6 +30,11 @@ namespace CouchNet.Impl
             HasPendingChanges = false;
         }
 
+        public void SaveChanges()
+        {
+            DesignDocument.SaveChanges();
+        }
+
         public override string ToString()
         {
             return string.Format("{0}/_view/{1}", DesignDocument, Name);

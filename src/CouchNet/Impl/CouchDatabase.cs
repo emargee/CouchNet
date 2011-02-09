@@ -36,8 +36,6 @@ namespace CouchNet.Impl
 
         internal IHttpResponse RawResponse { get; set; }
 
-        internal IList<CouchDesignDocument> DesignDocuments;
-
         #endregion
 
         public readonly string Name;
@@ -57,6 +55,11 @@ namespace CouchNet.Impl
             {
                 SetRevisionsLimit(value);
             }
+        }
+
+        public CouchDesignDocument this[string name]
+        {
+            get { return GetDesignDocument(name); }
         }
 
         #endregion
@@ -92,8 +95,6 @@ namespace CouchNet.Impl
             Name = databaseName;
 
             BulkUpdateBehaviour = CouchBulkUpdateBehaviour.NonAtomic;
-
-            DesignDocuments = new List<CouchDesignDocument>();
         }
 
         #endregion
@@ -345,9 +346,21 @@ namespace CouchNet.Impl
             return status;
         }
 
+        #endregion
+
+        #region Information Objects
+
+        public CouchDatabaseStatusResponse Status()
+        {
+            var path = Name;
+            RawResponse = Service.Connection.Get(path);
+
+            return new CouchDatabaseStatusResponse(RawResponse, CouchService.JsonSettings);
+        }
+
         public bool Exists(ICouchDocument document)
         {
-            if(document == null)
+            if (document == null)
             {
                 return false;
             }
@@ -361,19 +374,29 @@ namespace CouchNet.Impl
             return Service.Connection.Head(path).StatusCode == HttpStatusCode.OK || Service.Connection.Head(path).StatusCode == HttpStatusCode.NotModified;
         }
 
+        public int Count()
+        {
+            var status = Status();
+            return status.IsOk ? Status().DocumentCount : -1;
+        }
+        
         #endregion
 
         #region Design Document
 
         public CouchDesignDocument CreateDesignDocument(string name)
         {
-            throw new NotImplementedException();
-            //var doc = new CouchDesignDocument(name, this);
-            //DesignDocuments.Add(doc);
-            //return doc;
+            var doc = new CouchDesignDocument(name, this);
+            doc.SaveChanges();
+            return doc;
         }
 
-        public CouchDesignDocument DesignDocument(string name)
+        public ICouchServerResponse DropDesignDocument(string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public CouchDesignDocument GetDesignDocument(string name)
         {
             var documentName = "_design/" + name;
 
@@ -404,28 +427,6 @@ namespace CouchNet.Impl
             var results = new CouchQueryViewResultsParser<T>().Parse(RawResponse);
 
             return results;
-        }
-
-        #endregion
-
-        #region Other
-
-        public int DocumentCount()
-        {
-            var status = Status();
-            return status.IsOk ? Status().DocumentCount : -1;
-        }
-
-        #endregion
-
-        #region Information Objects
-
-        public CouchDatabaseStatusResponse Status()
-        {
-            var path = Name;
-            RawResponse = Service.Connection.Get(path);
-
-            return new CouchDatabaseStatusResponse(RawResponse, CouchService.JsonSettings);
         }
 
         #endregion

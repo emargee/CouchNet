@@ -66,6 +66,18 @@ namespace CouchNet
             return query;
         }
 
+        public static CouchViewQuery Descending(this CouchViewQuery query)
+        {
+            query.SortDescending = true;
+            return query;
+        }
+
+        public static CouchViewQuery StartKey(this CouchViewQuery query, string startKey)
+        {
+            query.StartKey = startKey;
+            return query;
+        }
+
         public static ICouchQueryResults<T> Execute<T>(this CouchView view, CouchViewQuery query) where T : ICouchDocument
         {
             return view.DesignDocument.ExecuteView<T>(view, query);

@@ -22,6 +22,8 @@ namespace CouchNet
         internal bool IncludeDocs { get; set; }
         internal bool DisableInclusiveEnd { get; set; }
 
+        internal object StartKey { get; set; }
+
         public CouchViewQuery() { }
 
         public CouchViewQuery(object key)
@@ -99,6 +101,11 @@ namespace CouchNet
                 qs.Add("key", JsonConvert.SerializeObject(Key));
             }
 
+            if(StartKey != null)
+            {
+                qs.Add("startkey", JsonConvert.SerializeObject(StartKey));
+            }
+
             if (StartDocId != null)
             {
                 qs.Add("startkey_docid", JsonConvert.SerializeObject(StartDocId));
@@ -112,6 +119,8 @@ namespace CouchNet
 
             return qs.ToString();
         }
+
+        #region Private Methods
 
         private static string ProcessWildcard(object end)
         {
@@ -139,5 +148,7 @@ namespace CouchNet
 
             return (JsonConvert.SerializeObject(end));
         }
+
+        #endregion
     }
 }

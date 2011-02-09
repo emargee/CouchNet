@@ -19,7 +19,7 @@ namespace CouchNet.Tests.Integration
 
             var query = new CouchViewQuery().Key("apple");
 
-            var results = db.DesignDocument("example").ExecuteView<TestEntity>("stringtest", query);
+            var results = db.GetDesignDocument("example").ExecuteView<TestEntity>("stringtest", query);
 
             Debug.WriteLine("-----------------------------------------");
 
@@ -55,7 +55,7 @@ namespace CouchNet.Tests.Integration
 
             var query = new CouchViewQuery().Key("apple").Limit(0);
 
-            var results = db.DesignDocument("example").ExecuteView<TestEntity>("stringtest", query);
+            var results = db.GetDesignDocument("example").ExecuteView<TestEntity>("stringtest", query);
 
             Debug.WriteLine("-----------------------------------------");
 
@@ -92,7 +92,7 @@ namespace CouchNet.Tests.Integration
 
             var query = new CouchViewQuery().Key(new[] { "apple", "orange" });
 
-            var results = db.DesignDocument("example").ExecuteView<TestEntity>("arraytest", query);
+            var results = db.GetDesignDocument("example").ExecuteView<TestEntity>("arraytest", query);
 
             Debug.WriteLine("-----------------------------------------");
 
@@ -128,7 +128,7 @@ namespace CouchNet.Tests.Integration
 
             var query = new CouchViewQuery().Key(new[] { "apple", "orange" }).Limit(0);
 
-            var results = db.DesignDocument("example").ExecuteView<TestEntity>("arraytest", query);
+            var results = db.GetDesignDocument("example").ExecuteView<TestEntity>("arraytest", query);
 
             Debug.WriteLine("-----------------------------------------");
 
@@ -165,7 +165,7 @@ namespace CouchNet.Tests.Integration
 
             var query = new CouchViewQuery().Key(new[] { "apple", "cats" }).EndKey(new[] { "apple", "*" });
 
-            var results = db.DesignDocument("example").ExecuteView<TestEntity>("arraytest", query);
+            var results = db.GetDesignDocument("example").ExecuteView<TestEntity>("arraytest", query);
 
             Debug.WriteLine("-----------------------------------------");
 
@@ -228,13 +228,13 @@ namespace CouchNet.Tests.Integration
             var svc = new CouchService(conn);
             var db = svc.GetDatabase("unittest");
 
-            var result = db.DesignDocument("example").ExecuteShow("test");
+            var result = db.GetDesignDocument("example").ExecuteShow("test");
             Debug.WriteLine(result.Output);
 
-            result = db.DesignDocument("example").ExecuteShow("test", "e99b84cd49824eaf90b5f5c164b39e12");
+            result = db.GetDesignDocument("example").ExecuteShow("test", "e99b84cd49824eaf90b5f5c164b39e12");
             Debug.WriteLine(result.Output);
 
-            result = db.DesignDocument("example").ExecuteShow("test", "e99b84cd49824eaf90b5f5c164b39e12", new NameValueCollection { { "format", "xml" } });
+            result = db.GetDesignDocument("example").ExecuteShow("test", "e99b84cd49824eaf90b5f5c164b39e12", new NameValueCollection { { "format", "xml" } });
             Debug.WriteLine(result.Output);
         }
 
@@ -245,12 +245,12 @@ namespace CouchNet.Tests.Integration
             var svc = new CouchService(conn);
             var db = svc.GetDatabase("unittest");
 
-            var result = db.DesignDocument("example").ExecuteList("htmlList", "test", new CouchViewQuery());
+            var result = db.GetDesignDocument("example").ExecuteList("htmlList", "test", new CouchViewQuery());
 
             Debug.WriteLine(result.Output);
 
             var query = new CouchViewQuery().Key("e99b84cd49824eaf90b5f5c164b39e12");
-            result = db.DesignDocument("example").ExecuteList("htmlList", "test", query );
+            result = db.GetDesignDocument("example").ExecuteList("htmlList", "test", query );
 
             Debug.WriteLine(result.Output);
         }
@@ -262,7 +262,7 @@ namespace CouchNet.Tests.Integration
             var svc = new CouchService(conn);
             var db = svc.GetDatabase("unittest");
 
-            var doc = db.DesignDocument("example");
+            var doc = db.GetDesignDocument("example");
 
             //-[ View Execution ]---------------------------------------------
 

@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
+using System.Linq;
 using CouchNet.Enums;
 using CouchNet.Exceptions;
 using CouchNet.Impl;
@@ -14,6 +16,8 @@ namespace CouchNet
 
         internal static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, MissingMemberHandling = MissingMemberHandling.Ignore };
 
+        private List<CouchDatabaseStatusResponse> _dbInfo;
+
         public bool EnableValidation { get; set; }
 
         public CouchDatabase this[string name]
@@ -21,6 +25,29 @@ namespace CouchNet
             get
             {
                 return GetDatabase(name);
+            }
+        }
+
+        public List<CouchDatabaseStatusResponse> DatabaseInfo
+        {
+            get
+            {
+                if(_dbInfo == null)
+                {
+                    _dbInfo = new List<CouchDatabaseStatusResponse>();
+
+                    foreach(var db in JsonConvert.DeserializeObject<List<string>>(Connection.Get("_all_dbs").Data))
+                    {
+                        var resp = new CouchDatabaseStatusResponse(Connection.Get(db), JsonSettings);
+
+                        if (resp.IsOk)
+                        {
+                            _dbInfo.Add(resp);
+                        }
+                    }
+                }
+
+                return _dbInfo;
             }
         }
 
@@ -60,16 +87,21 @@ namespace CouchNet
             return new CouchDatabase(name, this);
         }
 
-        private bool DatabaseExists(CouchDatabase database)
-        {
-            return database != null && DatabaseExists(database.Name);
-        }
-
-        private bool DatabaseExists(string databaseName)
+        public bool Exists(string databaseName)
         {
             var head = Connection.Head(databaseName).StatusCode;
 
             return head == HttpStatusCode.OK || head == HttpStatusCode.NotModified;
+        }
+
+        private bool Exists(CouchDatabase database)
+        {
+            return database != null && Exists(database.Name);
+        }
+
+        public int Count()
+        {
+            return DatabaseInfo.Count;
         }
 
         #endregion
@@ -146,7 +178,7 @@ namespace CouchNet
 
             if (EnableValidation)
             {
-                if (!DatabaseExists(database))
+                if (!Exists(database))
                 {
                     throw new CouchDatabaseNotFoundException(database.Name);
                 }
@@ -167,7 +199,7 @@ namespace CouchNet
 
             if (EnableValidation)
             {
-                if(!DatabaseExists(database))
+                if(!Exists(database))
                 {
                     throw new CouchDatabaseNotFoundException(database.Name);
                 }

@@ -38,7 +38,7 @@ namespace CouchNet.Impl
 
             Name = name;
             Database = database;
-            Id = "_design/" + Name;
+            Id = "_design/" + Name; //TODO: check or escape name
             Views = new Dictionary<string, CouchView>();
             Shows = new Dictionary<string, CouchShowHandler>();
             Lists = new Dictionary<string, CouchListHandler>();
@@ -183,6 +183,28 @@ namespace CouchNet.Impl
         {
             //201 created + output
             throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region Saving
+        
+        public void SaveChanges()
+        {
+            //Check this, Views, Lists, Shows, Updaters
+            if(!HasPendingChanges)
+            {
+                return;
+            }
+
+            //Compile object
+
+            if(string.IsNullOrEmpty(Revision))
+            {
+                //Add
+            }
+
+            //Update
         }
 
         #endregion

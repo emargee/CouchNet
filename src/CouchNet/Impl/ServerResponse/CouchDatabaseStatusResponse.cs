@@ -24,7 +24,6 @@ namespace CouchNet.Impl.ServerResponse
         
         public int DocumentDeletedCount { get; set; }
         
-        //NOTE: Cloudant uses a string
         public string UpdateSequence { get; set; }
         
         public int PurgeSequence { get; set; }
@@ -57,8 +56,8 @@ namespace CouchNet.Impl.ServerResponse
             {
                 var status = JsonConvert.DeserializeObject<CouchDatabaseStatusDefinition>(rawResponse.Data, settings);
 
-                Id = rawResponse.ETag;
-                Revision = rawResponse.ETag;
+                Id = status.DatabaseName;
+                Revision = status.UpdateSequence;
                 IsOk = true;
                 DatabaseName = status.DatabaseName;
                 DocumentCount = status.DocumentCount;

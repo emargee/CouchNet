@@ -1,5 +1,6 @@
 using System.Collections.Specialized;
 using System.Diagnostics;
+using CouchNet;
 using CouchNet.Impl;
 using CouchNet.Tests.Integration.Model;
 using NUnit.Framework;
@@ -66,14 +67,20 @@ namespace CouchNet.Tests.Integration
 
             var svc = new CouchService(conn);
             var db2 = svc["unittest"];
-            var doc = db2.DesignDocument("monkeytennis");
+            var doc = db2.GetDesignDocument("monkeytennis");
 
-            svc["unittest"].DesignDocument("monkeyTennis").Views["test"].Execute<BusinessCard>(new CouchViewQuery());
-            svc["unittest"].DesignDocument("monkeyTennis").Shows["test"].Execute("1234");
+            svc["unittest"].GetDesignDocument("monkeyTennis").Views["test"].Execute<BusinessCard>(new CouchViewQuery());
+            svc["unittest"].GetDesignDocument("monkeyTennis").Shows["test"].Execute("1234");
 
-            svc["unittest"].DesignDocument("monkeyTennis");
+            svc["unittest"].GetDesignDocument("monkeyTennis");
 
-            //var show = db.DesignDocument("example").Show("test");
+            //Long
+            svc.GetDatabase("unittest").GetDesignDocument("moneyTennis").Views["test"].Execute<BusinessCard>(new CouchViewQuery());
+
+            //Super short ..
+            svc["unittest"]["moneyTennis"].Views["test"].Execute<BusinessCard>(new CouchViewQuery());
+
+            //var show = db.GetDesignDocument("example").Show("test");
 
             //Debug.WriteLine(db.ExecuteShow(show, "e99b84cd49824eaf90b5f5c164b39e12"));
 
@@ -82,7 +89,7 @@ namespace CouchNet.Tests.Integration
 
             //Debug.WriteLine(db.ExecuteShow(show, "e99b84cd49824eaf90b5f5c164b39e12", qs));
 
-            //var doc = db.DesignDocument("example");
+            //var doc = db.GetDesignDocument("example");
             //var list = doc.List("htmlList");
             //var view = doc.View("test");
             //var resp = db.ExecuteList(list, view, new CouchViewQuery());
@@ -90,7 +97,7 @@ namespace CouchNet.Tests.Integration
             //Debug.WriteLine(resp.ContentType);
             //Debug.WriteLine(resp.Output);
 
-            //var docExample = db.DesignDocument("example");
+            //var docExample = db.GetDesignDocument("example");
             //docExample.Info();
             //docExample.View("test").Execute<BusinessCard>();
             //docExample.Show("test").Execute<BusinessCard>(documentId, queryStringParams);
@@ -153,7 +160,7 @@ namespace CouchNet.Tests.Integration
             var svc = new CouchService(conn);
             var db = svc.GetDatabase("unittest");
 
-            //var view = db.DesignDocument("example").View("test");
+            //var view = db.GetDesignDocument("example").View("test");
 
             //Debug.WriteLine(view.Name);
 
@@ -184,6 +191,31 @@ namespace CouchNet.Tests.Integration
             //newObj.Add("shows",newTok);
 
             //Debug.WriteLine(newObj);
+        }
+
+        [Test]
+        public void CreationSyntax()
+        {
+            var conn = new CouchConnection("http://localhost", 5984);
+            var svc = new CouchService(conn);
+            
+            //Update existing view
+            var view = svc["unittest"]["example"].Views["test"];
+            view.Map = "function(doc) { emit(doc._id, doc); }";
+            view.SaveChanges();
+
+            //Create new view
+            var newView = svc["unittest"]["example"].CreateView("newTest");
+            newView.Map = "function(doc) { emit(doc._id, doc); }";
+            newView.SaveChanges();
+
+            var designDoc = svc["unittest"].CreateDesignDocument("example2");
+            //designDoc.Views.Add();
+
+
+            //var view = doc.CreateView("myTest");
+            //view.Map = "function(doc) { emit(doc._id, doc); }";
+            //doc.SaveChanges();
         }
     }
 }

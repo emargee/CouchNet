@@ -40,7 +40,7 @@ namespace CouchNet.Tests
 
             var query = new CouchViewQuery().Key("apple");
 
-            var results = db.DesignDocument("example").ExecuteView<ExampleEntity>("testView", query);
+            var results = db.GetDesignDocument("example").ExecuteView<ExampleEntity>("testView", query);
             Assert.IsTrue(results.IsOk);
             Assert.IsFalse(results.HasResults);
             Assert.AreEqual(0, results.Count);
