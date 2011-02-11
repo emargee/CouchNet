@@ -504,7 +504,7 @@ namespace CouchNet.Tests
 
             var svc = new CouchService(_connectionMock.Object);
             var db = svc.GetDatabase("unittest");
-            Assert.Throws<ArgumentNullException>(() => db.Get<ExampleEntity>(null, null));
+            Assert.Throws<ArgumentNullException>(() => db.Get<ExampleEntity>(null, string.Empty));
 
         }
 

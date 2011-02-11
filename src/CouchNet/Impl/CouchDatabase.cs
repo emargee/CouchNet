@@ -108,7 +108,7 @@ namespace CouchNet.Impl
                 throw new ArgumentNullException();
             }
 
-            return Get<T>(id, new QueryString());
+            return Get<T>(id, new QueryString(), default(T));
         }
 
         public T Get<T>(string id, string revision) where T : ICouchDocument
@@ -125,7 +125,7 @@ namespace CouchNet.Impl
                 qs.Add("rev", revision);
             }
 
-            return Get<T>(id, qs);
+            return Get<T>(id, qs, default(T));
         }
 
         public T Get<T>(string id, CouchDocumentOptions options) where T : ICouchDocument
@@ -147,7 +147,12 @@ namespace CouchNet.Impl
                 qs.Add("revs", "true");
             }
 
-            return Get<T>(id, qs);
+            return Get<T>(id, qs, default(T));
+        }
+
+        public T Get<T>(string id, T anonymousTypeObject)
+        {
+            return Get<T>(id, new QueryString(), anonymousTypeObject);
         }
 
         public ICouchQueryResults<T> GetMany<T>(IEnumerable<string> ids) where T : ICouchDocument
@@ -464,7 +469,7 @@ namespace CouchNet.Impl
             return new CouchServerResponse(RawResponse);
         }
 
-        private T Get<T>(string id, QueryString queryString) where T : ICouchDocument
+        private T Get<T>(string id, QueryString queryString, T anonymousTypeObject)
         {
             if (Service.EnableValidation && !Exists(id))
             {
@@ -478,6 +483,11 @@ namespace CouchNet.Impl
             if (RawResponse.StatusCode != HttpStatusCode.OK && RawResponse.StatusCode != HttpStatusCode.NotModified)
             {
                 throw new CouchDocumentNotFoundException(id);
+            }
+
+            if(!EqualsDefaultValue(anonymousTypeObject))
+            {
+                return JsonConvert.DeserializeAnonymousType(RawResponse.Data, anonymousTypeObject);
             }
 
             return JsonConvert.DeserializeObject<T>(RawResponse.Data);
@@ -507,6 +517,11 @@ namespace CouchNet.Impl
         {
             var path = string.Format("{0}/{1}", Name, "_revs_limit");
             RawResponse = Service.Connection.Put(path, limit.ToString());
+        }
+
+        private bool EqualsDefaultValue<T>(T value)
+        {
+            return EqualityComparer<T>.Default.Equals(value, default(T));
         }
 
         #endregion
