@@ -64,8 +64,11 @@
   <ItemGroup>
     <Compile Include="CouchDocumentProperties.cs" />
     <Compile Include="CouchDocumentSimple.cs" />
+    <Compile Include="Exceptions\CouchDocumentCreationException.cs" />
     <Compile Include="Exceptions\CouchDatabaseNotFoundException.cs" />
+    <Compile Include="Exceptions\CouchDocumentSaveException.cs" />
     <Compile Include="Impl\CouchDocumentUpdateHandler.cs" />
+    <Compile Include="Impl\CouchRewriteRule.cs" />
     <Compile Include="Impl\ServerResponse\CouchDesignDocumentInfoResponse.cs" />
     <Compile Include="Enums\CouchBulkUpdateBehaviour.cs" />
     <Compile Include="Enums\CouchDocumentOptions.cs" />
@@ -102,7 +105,7 @@
     <Compile Include="Internal\CouchDesignDocumentInfoDefinition.cs" />
     <Compile Include="Internal\CouchDocumentCollectionDefinition.cs" />
     <Compile Include="Impl\ResultParsers\CouchQueryViewResultsParser.cs" />
-    <Compile Include="Internal\CouchRewriteHandlerDefinition.cs" />
+    <Compile Include="Internal\CouchRewriteRuleDefinition.cs" />
     <Compile Include="Internal\CouchTempViewDefinition.cs" />
     <Compile Include="Internal\CouchViewDefinition.cs" />
     <Compile Include="Internal\CouchViewResultsRowDefinition.cs" />

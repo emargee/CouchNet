@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-
+using CouchNet.Exceptions;
 using CouchNet.Impl.ResultParsers;
 using CouchNet.Impl.ServerResponse;
 using CouchNet.Internal;
@@ -22,16 +22,17 @@ namespace CouchNet.Impl
 
         public bool HasPendingChanges { get; set; }
 
-        public IDictionary<string,CouchView> Views { get; set; }
-        public IDictionary<string,CouchShowHandler> Shows { get; set; }
-        public IDictionary<string,CouchListHandler> Lists { get; set; }
-        public IDictionary<string,CouchDocumentUpdateHandler> DocumentUpdaters { get; set; }
+        public IDictionary<string, CouchView> Views { get; set; }
+        public IDictionary<string, CouchShowHandler> Shows { get; set; }
+        public IDictionary<string, CouchListHandler> Lists { get; set; }
+        public IDictionary<string, CouchDocumentUpdateHandler> DocumentUpdaters { get; set; }
+        public List<CouchRewriteRule> RewriteRules { get; set; }
 
         #region ctor
 
-        public CouchDesignDocument(string name, CouchDatabase database)
+        internal CouchDesignDocument(string name, CouchDatabase database)
         {
-            if(string.IsNullOrEmpty(name) || database == null)
+            if (string.IsNullOrEmpty(name) || database == null)
             {
                 throw new ArgumentNullException();
             }
@@ -42,6 +43,9 @@ namespace CouchNet.Impl
             Views = new Dictionary<string, CouchView>();
             Shows = new Dictionary<string, CouchShowHandler>();
             Lists = new Dictionary<string, CouchListHandler>();
+            RewriteRules = new List<CouchRewriteRule>();
+            DocumentUpdaters = new Dictionary<string, CouchDocumentUpdateHandler>();
+            Language = "javascript";
             HasPendingChanges = true;
         }
 
@@ -52,10 +56,11 @@ namespace CouchNet.Impl
             Id = designDocument.Id;
             Revision = designDocument.Revision;
             Name = designDocument.Id.Replace("_design/", string.Empty);
-            Views = designDocument.Views.ToDictionary(k => k.Key, v => new CouchView(v,this));
-            Shows = designDocument.Shows.ToDictionary(k => k.Key, v => new CouchShowHandler(v,this));
+            Views = designDocument.Views.ToDictionary(k => k.Key, v => new CouchView(v, this));
+            Shows = designDocument.Shows.ToDictionary(k => k.Key, v => new CouchShowHandler(v, this));
             Lists = designDocument.Lists.ToDictionary(k => k.Key, v => new CouchListHandler(v, this));
             DocumentUpdaters = designDocument.DocumentUpdateHandlers.ToDictionary(k => k.Key, v => new CouchDocumentUpdateHandler(v, this));
+            RewriteRules = designDocument.RewriteRules.Select(x => new CouchRewriteRule(x, this)).ToList();
             Language = designDocument.Language;
             HasPendingChanges = false;
         }
@@ -187,24 +192,101 @@ namespace CouchNet.Impl
 
         #endregion
 
+        #region RewriteRules
+
+        public CouchRewriteRule CreateRewriteRule(string to, string from, string method)
+        {
+            throw new NotImplementedException();
+        }
+
+        public CouchRewriteRule CreateRewriteRule(string to, string from, string method, string query)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
         #region Saving
-        
+
         public void SaveChanges()
         {
-            //Check this, Views, Lists, Shows, Updaters
-            if(!HasPendingChanges)
+            foreach (var couchView in Views.Where(couchView => couchView.Value.HasPendingChanges))
+            {
+                HasPendingChanges = true;
+            }
+
+            foreach (var couchShow in Shows.Where(couchShow => couchShow.Value.HasPendingChanges))
+            {
+                HasPendingChanges = true;
+            }
+
+            foreach (var couchList in Shows.Where(couchList => couchList.Value.HasPendingChanges))
+            {
+                HasPendingChanges = true;
+            }
+
+            foreach (var couchUpd in Shows.Where(couchUpd => couchUpd.Value.HasPendingChanges))
+            {
+                HasPendingChanges = true;
+            }
+
+            foreach (var couchdRew in RewriteRules.Where(couchdRew => couchdRew.HasPendingChanges))
+            {
+                HasPendingChanges = true;
+            }
+
+            if (!HasPendingChanges)
             {
                 return;
             }
 
-            //Compile object
+            //Compile object..
 
-            if(string.IsNullOrEmpty(Revision))
+            var def = new CouchDesignDocumentDefinition { Id = Id };
+
+            if (!string.IsNullOrEmpty(Revision))
             {
-                //Add
+                def.Revision = Revision;
             }
 
-            //Update
+            def.Language = Language;
+
+            foreach (var couchView in Views)
+            {
+                def.Views.Add(couchView.Key, couchView.Value.ToDefinition());
+            }
+
+            if(Views.Count == 0) { def.Views = null; }
+            if(Shows.Count == 0) { def.Shows = null; }
+            if(Lists.Count == 0) { def.Lists = null; }
+            if(DocumentUpdaters.Count == 0) { def.DocumentUpdateHandlers = null; }
+            if (RewriteRules.Count == 0) { def.RewriteRules = null; }
+
+            if (string.IsNullOrEmpty(Revision))
+            {
+                if(Database.Exists(Id))
+                {
+                    throw new CouchDocumentCreationException(Id, "Cannot create new as design document of same name already exists.");
+                }
+
+                var addResponse = Database.Add(def);
+                
+                if(addResponse.IsOk)
+                {
+                    Revision = addResponse.Revision;
+                }
+
+                return;
+            }
+
+            var saveResponse = Database.Save(def);
+
+            if(saveResponse.IsOk)
+            {
+                Revision = saveResponse.Revision;
+            }
+
+            return;
         }
 
         #endregion

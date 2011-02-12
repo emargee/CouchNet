@@ -2,6 +2,7 @@ using System.Collections.Specialized;
 using CouchNet.Enums;
 using CouchNet.Impl;
 using CouchNet.Impl.ServerResponse;
+using CouchNet.Internal;
 
 namespace CouchNet
 {
@@ -96,6 +97,11 @@ namespace CouchNet
         public static CouchHandlerResponse Execute(this CouchShowHandler handler, string documentId, NameValueCollection queryString)
         {
             return handler.DesignDocument.ExecuteShow(handler, documentId, queryString);
+        }
+
+        internal static CouchViewDefinition ToDefinition(this CouchView view)
+        {
+            return new CouchViewDefinition { Map = view.Map, Reduce = view.Reduce };
         }
     }
 }

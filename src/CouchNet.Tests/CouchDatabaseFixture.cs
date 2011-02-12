@@ -417,6 +417,25 @@ namespace CouchNet.Tests
         }
 
         [Test]
+        public void Get_AnonymousType_CanDeserialize()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Get("unittest/abc123")).Returns(_basicResponse.Object);
+
+            var svc = new CouchService(_connectionMock.Object);
+            var db = svc.GetDatabase("unittest");
+
+            var exampleEntity = new {_id = string.Empty, Name = string.Empty, Age = 0, IsAlive = false};
+            var result = db.Get("abc123", exampleEntity);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(_exampleObject.Name, result.Name);
+            Assert.AreEqual(_exampleObject.Age, result.Age);
+            Assert.AreEqual(_exampleObject.IsAlive, result.IsAlive);
+            Assert.AreEqual(_exampleObject.Revision, "946B7D1C");    
+        }
+
+        [Test]
         public void Get_FieldsMissing_NotFoundFieldsShouldBeDefault()
         {
             _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
@@ -516,6 +535,34 @@ namespace CouchNet.Tests
             var svc = new CouchService(_connectionMock.Object);
             var db = svc.GetDatabase("unittest");
             Assert.Throws<ArgumentNullException>(() => db.Get<ExampleEntity>(null, CouchDocumentOptions.None));
+        }
+
+        [Test]
+        public void Get_CouchDoc_Id()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Get("unittest/abc123")).Returns(_revisionInfoResponse.Object);
+
+            var svc = new CouchService(_connectionMock.Object);
+            var db = svc.GetDatabase("unittest");
+            var result = db.Get("abc123");
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(result.Revision, "946B7D1C");
+        }
+
+        [Test]
+        public void Get_CouchDoc_IdAndRevision()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Get("unittest/abc123?rev=946B7D1C")).Returns(_revisionInfoResponse.Object);
+
+            var svc = new CouchService(_connectionMock.Object);
+            var db = svc.GetDatabase("unittest");
+            var result = db.Get("abc123","946B7D1C");
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(result.Revision, "946B7D1C");
         }
 
         [Test]
@@ -1244,6 +1291,47 @@ namespace CouchNet.Tests
             var db = svc.GetDatabase("unittest");
 
             Assert.Throws<CouchDocumentNotFoundException>(() => db.GetDesignDocument("example"));
+        }
+
+        [Test]
+        public void CreateDesignDocument()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(x => x.Head("unittest/_design/example")).Returns(_designDocumentError.Object);
+            _connectionMock.Setup(x => x.Put("unittest/_design/example",It.IsAny<string>())).Returns(_addDocumentResponse.Object);
+            var svc = new CouchService(_connectionMock.Object);
+            var db = svc.GetDatabase("unittest");
+            var doc = db.CreateDesignDocument("example");
+
+            Assert.IsNotNull(doc);
+            Assert.AreEqual("javascript", doc.Language);
+            Assert.AreEqual("_design/example", doc.Id);
+            Assert.AreEqual("example", doc.Name);
+            Assert.AreEqual(0, doc.Views.Count);
+        }
+
+        [Test]
+        public void CreateDesignDocument_Conflict_Throws()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(x => x.Head("unittest/_design/example")).Returns(_designDocument.Object);
+
+            var svc = new CouchService(_connectionMock.Object);
+            var db = svc.GetDatabase("unittest");
+
+            Assert.Throws<CouchDocumentCreationException>(() => db.CreateDesignDocument("example"));
+        }
+
+        [Test]
+        public void DropDesignDocument()
+        {
+            _connectionMock = new Mock<ICouchConnection>(MockBehavior.Strict);
+            _connectionMock.Setup(s => s.Get("unittest/_design/example")).Returns(_designDocument.Object);
+            _connectionMock.Setup(s => s.Delete("unittest/_design/example?rev=35-6c7904fb18e7230bcab920e88f158f80")).Returns(_deleteDocumentResponse.Object);
+            var svc = new CouchService(_connectionMock.Object);
+            var resp = svc["unittest"].DropDesignDocument("example");
+
+            Assert.IsTrue(resp.IsOk);
         }
 
         #endregion

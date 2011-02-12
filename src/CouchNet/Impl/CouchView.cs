@@ -7,10 +7,30 @@ namespace CouchNet.Impl
     public class CouchView : ICouchView, ITrackChanges
     {
         internal readonly CouchDesignDocument DesignDocument;
-        public readonly string Name;        
+        public readonly string Name;
 
-        public string Map { get; set; }
-        public string Reduce { get; set; }
+        private string _map;
+        private string _reduce;
+
+        public string Map
+        {
+            get { return _map; }
+            set
+            {
+                HasPendingChanges = true;
+                _map = value;
+            }
+        }
+
+        public string Reduce
+        {
+            get { return _reduce; }
+            set
+            {
+                HasPendingChanges = true;
+                _reduce = value;
+            }
+        }
 
         public bool HasPendingChanges { get; private set; }
 

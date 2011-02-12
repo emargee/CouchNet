@@ -101,6 +101,16 @@ namespace CouchNet.Impl
 
         #region Basic Operation Methods
 
+        public CouchDocument Get(string id)
+        {
+            return Get<CouchDocument>(id);
+        }
+
+        public CouchDocument Get(string id, string revision)
+        {
+            return Get<CouchDocument>(id,revision);
+        }
+
         public T Get<T>(string id) where T : ICouchDocument
         {
             if (string.IsNullOrEmpty(id))
@@ -391,22 +401,22 @@ namespace CouchNet.Impl
 
         public CouchDesignDocument CreateDesignDocument(string name)
         {
-            var doc = new CouchDesignDocument(name, this);
+            var doc = new CouchDesignDocument(name,this);
             doc.SaveChanges();
             return doc;
         }
 
         public ICouchServerResponse DropDesignDocument(string name)
         {
-            throw new NotImplementedException();
+            var documentName = "_design/" + name;
+            var doc = Get(documentName);
+            return Delete(doc);
         }
 
         public CouchDesignDocument GetDesignDocument(string name)
         {
             var documentName = "_design/" + name;
-
             var result = Get<CouchDesignDocumentDefinition>(documentName);
-
             return new CouchDesignDocument(result, this);
         }
 
@@ -442,7 +452,7 @@ namespace CouchNet.Impl
         {
             if (!isNew && string.IsNullOrEmpty(document.Revision))
             {
-                throw new InvalidOperationException("Updating an existing document requires a 'revision'(_rev) value.");
+                throw new InvalidOperationException("Updating an existing document requires the 'revision'(_rev) value to be set.");
             }
 
             if (string.IsNullOrEmpty(document.Id))

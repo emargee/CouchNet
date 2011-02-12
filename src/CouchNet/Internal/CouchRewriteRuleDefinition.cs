@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 namespace CouchNet.Internal
 {
     [JsonObject]
-    public class CouchRewriteHandlerDefinition
+    public class CouchRewriteRuleDefinition
     {
         [JsonProperty(PropertyName = "from")]
         public string From { get; set; }
