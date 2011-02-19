@@ -37,9 +37,14 @@ namespace CouchNet.Impl
                 throw new ArgumentNullException();
             }
 
+            if(name.StartsWith("_design/"))
+            {
+                name = name.Replace("_design/", string.Empty);
+            }
+
             Name = name;
             Database = database;
-            Id = "_design/" + Name; //TODO: check or escape name
+            Id = "_design/" + Name;
             Views = new Dictionary<string, CouchView>();
             Shows = new Dictionary<string, CouchShowHandler>();
             Lists = new Dictionary<string, CouchListHandler>();
@@ -76,6 +81,12 @@ namespace CouchNet.Impl
             return view;
         }
 
+        public void DropView(string name)
+        {
+            Views.Remove(name);
+            SaveChanges();
+        }
+
         public ICouchQueryResults<T> ExecuteView<T>(string viewName, CouchViewQuery query) where T : ICouchDocument
         {
             return ExecuteView<T>(Views[viewName], query);
@@ -84,9 +95,7 @@ namespace CouchNet.Impl
         public ICouchQueryResults<T> ExecuteView<T>(CouchView view, CouchViewQuery query) where T : ICouchDocument
         {
             var path = string.Format("{0}/{1}{2}", Database.Name, view, query);
-
             var rawResponse = Database.Service.Connection.Get(path);
-
             var results = new CouchQueryViewResultsParser<T>().Parse(rawResponse);
 
             return results;
@@ -101,6 +110,12 @@ namespace CouchNet.Impl
             var show = new CouchShowHandler(name, this);
             Shows.Add(name, show);
             return show;
+        }
+
+        public void DropShow(string name)
+        {
+            Shows.Remove(name);
+            SaveChanges();
         }
 
         public CouchHandlerResponse ExecuteShow(string handler)
@@ -159,6 +174,12 @@ namespace CouchNet.Impl
             return list;
         }
 
+        public void DropList(string name)
+        {
+            Lists.Remove(name);
+            SaveChanges();
+        }
+
         public CouchHandlerResponse ExecuteList(string handler, string viewName, CouchViewQuery query)
         {
             return ExecuteList(Lists[handler], Views[viewName], query);
@@ -182,6 +203,12 @@ namespace CouchNet.Impl
             var updater = new CouchDocumentUpdateHandler(name, this);
             DocumentUpdaters.Add(name, updater);
             return updater;
+        }
+
+        public void DropUpdater(string name)
+        {
+            DocumentUpdaters.Remove(name);
+            SaveChanges();
         }
 
         public CouchHandlerResponse ExecuteDocumentUpdater(CouchDocumentUpdateHandler handler, string documentId, NameValueCollection queryString)

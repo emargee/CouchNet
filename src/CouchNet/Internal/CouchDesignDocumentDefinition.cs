@@ -27,7 +27,7 @@ namespace CouchNet.Internal
         public Dictionary<string, string> Lists { get; set; }
 
         [JsonProperty(PropertyName = "rewrites")]
-        public IEnumerable<CouchRewriteRuleDefinition> RewriteRules { get; set; }
+        public List<CouchRewriteRuleDefinition> RewriteRules { get; set; }
 
         [JsonProperty(PropertyName = "updates")]
         public Dictionary<string, string> DocumentUpdateHandlers { get; set; }

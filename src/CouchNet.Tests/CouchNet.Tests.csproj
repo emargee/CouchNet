@@ -52,6 +52,10 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Http, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\Microsoft.Http.dll</HintPath>
+    </Reference>
     <Reference Include="Moq, Version=3.1.416.3, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\Moq.dll</HintPath>
@@ -76,6 +80,7 @@
     <Compile Include="CouchHandlerFixture.cs" />
     <Compile Include="CouchServiceFixture.cs" />
     <Compile Include="CouchViewQueryFixture.cs" />
+    <Compile Include="HttpTransportFixture.cs" />
     <Compile Include="Model\BadJsonPropertyClass.cs" />
     <Compile Include="Model\ExampleEntity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

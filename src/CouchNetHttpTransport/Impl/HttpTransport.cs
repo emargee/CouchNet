@@ -59,14 +59,11 @@ namespace CouchNet.HttpTransport.Impl
             headValues.AddString("\"" + value + "\"");
             Client.DefaultHeaders.IfNoneMatch = headValues;
 
-            if (Client.DefaultHeaders.CacheControl == null)
-            {
-                var cc = new CacheControl();
-                cc.MaxAge = new TimeSpan(0);
+            if (Client.DefaultHeaders.CacheControl != null) return;
 
-                Client.DefaultHeaders.CacheControl = cc;
-            }
+            var cc = new CacheControl { MaxAge = new TimeSpan(0) };
 
+            Client.DefaultHeaders.CacheControl = cc;
         }
 
         public void NoCache()

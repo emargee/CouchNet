@@ -108,7 +108,7 @@ namespace CouchNet.Impl
 
         public CouchDocument Get(string id, string revision)
         {
-            return Get<CouchDocument>(id,revision);
+            return Get<CouchDocument>(id, revision);
         }
 
         public T Get<T>(string id) where T : ICouchDocument
@@ -394,14 +394,14 @@ namespace CouchNet.Impl
             var status = Status();
             return status.IsOk ? Status().DocumentCount : -1;
         }
-        
+
         #endregion
 
         #region Design Document
 
         public CouchDesignDocument CreateDesignDocument(string name)
         {
-            var doc = new CouchDesignDocument(name,this);
+            var doc = new CouchDesignDocument(name, this);            
             doc.SaveChanges();
             return doc;
         }
@@ -495,7 +495,7 @@ namespace CouchNet.Impl
                 throw new CouchDocumentNotFoundException(id);
             }
 
-            if(!EqualsDefaultValue(anonymousTypeObject))
+            if (!EqualsDefaultValue(anonymousTypeObject))
             {
                 return JsonConvert.DeserializeAnonymousType(RawResponse.Data, anonymousTypeObject);
             }

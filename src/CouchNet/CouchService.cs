@@ -18,7 +18,11 @@ namespace CouchNet
 
         private List<CouchDatabaseStatusResponse> _dbInfo;
 
+        #region Service-wide Settings
+
         public bool EnableValidation { get; set; }
+
+        #endregion
 
         public CouchDatabase this[string name]
         {

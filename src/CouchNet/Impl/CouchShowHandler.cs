@@ -14,7 +14,7 @@ namespace CouchNet.Impl
         {
             Name = viewName;
             DesignDocument = designDocument;
-            HasPendingChanges = false;
+            HasPendingChanges = true;
         }
 
         internal CouchShowHandler(KeyValuePair<string, string> showDefinition, CouchDesignDocument designDocument)
@@ -22,12 +22,12 @@ namespace CouchNet.Impl
             DesignDocument = designDocument;
             Name = showDefinition.Key;
             Function = showDefinition.Value;
-            HasPendingChanges = true;
+            HasPendingChanges = false;
         }
 
         public override string ToString()
         {
-            return string.Format("_design/{0}/_show/{1}", DesignDocument, Name);    
+            return string.Format("_design/{0}/_show/{1}", DesignDocument.Name, Name);    
         }
     }
 }
